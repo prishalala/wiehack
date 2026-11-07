@@ -50,18 +50,20 @@ function TeacherPortalRoot() {
 
 function TeacherGate() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Only guard routes under /teacher — otherwise leaving login (e.g. to "/") gets yanked back.
+  const inPortal = pathname === "/teacher" || pathname.startsWith("/teacher/");
   const isAuthPage = AUTH_PATHS.has(pathname);
   const { teacher, loading, authAvailable } = useTeacherAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading || isAuthPage) return;
+    if (!inPortal || loading || isAuthPage) return;
     if (authAvailable && !teacher) {
       void navigate({ to: "/teacher/login" });
     }
-  }, [loading, isAuthPage, authAvailable, teacher, navigate]);
+  }, [inPortal, loading, isAuthPage, authAvailable, teacher, navigate]);
 
-  if (isAuthPage) return <Outlet />;
+  if (!inPortal || isAuthPage) return <Outlet />;
 
   if (authAvailable && (loading || !teacher)) {
     return (

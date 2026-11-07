@@ -24,16 +24,19 @@ function ParentPortalRoot() {
 
 function ParentGate() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Only guard routes under /parent — otherwise leaving login (e.g. to "/") gets yanked back.
+  const inPortal = pathname === "/parent" || pathname.startsWith("/parent/");
   const isLogin = pathname === "/parent/login";
   const { parent, loading } = useParentAuth();
   const navigate = useNavigate();
   const { lang } = useParentLang();
 
   useEffect(() => {
-    if (!loading && !parent && !isLogin) void navigate({ to: "/parent/login" });
-  }, [loading, parent, isLogin, navigate]);
+    if (!inPortal || loading || isLogin || parent) return;
+    void navigate({ to: "/parent/login" });
+  }, [inPortal, loading, parent, isLogin, navigate]);
 
-  if (isLogin) return <Outlet />;
+  if (!inPortal || isLogin) return <Outlet />;
   if (loading || !parent) {
     return (
       <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">

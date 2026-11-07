@@ -22,14 +22,18 @@ function StudentPortalRoot() {
 
 function StudentGate() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  // Only guard routes under /student — otherwise leaving login (e.g. to "/") gets yanked back.
+  const inPortal = pathname === "/student" || pathname.startsWith("/student/");
   const isLogin = pathname === "/student/login";
   const { student, loading } = useStudentAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && !student && !isLogin) void navigate({ to: "/student/login" });
-  }, [loading, student, isLogin, navigate]);
+    if (!inPortal || loading || isLogin || student) return;
+    void navigate({ to: "/student/login" });
+  }, [inPortal, loading, student, isLogin, navigate]);
 
+  if (!inPortal) return <Outlet />;
   if (isLogin) return <Outlet />;
   if (loading || !student) {
     return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">{loading ? "Checking your sign-in…" : "Redirecting to sign in…"}</div>;
