@@ -43,9 +43,9 @@ export const Route = createFileRoute("/parent/")({
 
 const KIND_STYLE: Record<string, string> = {
   homework: "bg-sky-soft text-sky",
-  quiz: "bg-primary-soft text-primary-deep",
+  quiz: "bg-primary-soft text-accent-foreground",
   test: "bg-alert-soft text-alert-foreground",
-  project: "bg-success-soft text-success",
+  project: "bg-success-soft text-success-foreground",
 };
 
 function kindLabel(lang: string, kind: string) {
@@ -62,7 +62,7 @@ function fmtDate(lang: string, d: string) {
 }
 
 function gradeTone(pct: number) {
-  return pct >= 80 ? "bg-success" : pct >= 60 ? "bg-alert" : "bg-tomato";
+  return pct >= 80 ? "bg-success" : pct >= 60 ? "bg-alert" : "bg-destructive";
 }
 
 function fmtPoints(n: number) {
@@ -196,7 +196,7 @@ function ParentHome() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-foreground via-foreground to-primary-deep p-7 text-background shadow-lift sm:p-9">
+      <section className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-foreground via-foreground to-primary p-7 text-background shadow-lift sm:p-9">
         <span className="glow -right-10 -top-20 h-64 w-64 bg-alert/40" aria-hidden />
         <div className="relative flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -243,7 +243,7 @@ function ParentHome() {
           tone="from-alert-soft/80 text-alert-foreground"
         />
         <Stat label={pt(lang, "assignmentsTitle")} value={data.stats.assignments} icon={ClipboardList} tone="from-sky-soft/80 text-sky" />
-        <Stat label={pt(lang, "gradesTitle")} value={data.stats.graded} icon={CheckCircle2} tone="from-success-soft/80 text-success" />
+        <Stat label={pt(lang, "gradesTitle")} value={data.stats.graded} icon={CheckCircle2} tone="from-success-soft/80 text-success-foreground" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_1fr]">
@@ -314,12 +314,12 @@ function ParentHome() {
               <p className="mt-4 rounded-xl border border-dashed bg-card/80 p-6 text-center text-sm text-muted-foreground">{pt(lang, "noMistakes")}</p>
             ) : (
               <ul className="mt-4 space-y-3">
-                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-tomato">
+                <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-destructive">
                   <Target className="h-3.5 w-3.5" />
                   {pt(lang, "weakTitle", child)}
                 </p>
                 {data.weakAreas.map((w) => (
-                  <li key={w.id} className="rounded-xl border-s-4 border-tomato bg-card p-3 shadow-soft">
+                  <li key={w.id} className="rounded-xl border-s-4 border-destructive bg-card p-3 shadow-soft">
                     <p className="font-semibold">{w.title}</p>
                     <p className="mt-1 text-sm text-muted-foreground">
                       <b className="font-medium">{pt(lang, "whyLabel")}:</b> {w.description}
@@ -333,9 +333,9 @@ function ParentHome() {
             )}
           </section>
 
-          <section className="surface bg-gradient-to-br from-tomato/5 to-card to-50% p-6">
+          <section className="surface bg-gradient-to-br from-destructive/5 to-card to-50% p-6">
             <h2 className="flex items-center gap-2 text-lg font-semibold">
-              <AlertTriangle className="h-5 w-5 text-tomato" />
+              <AlertTriangle className="h-5 w-5 text-destructive" />
               {pt(lang, "mistakesTitle")}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{pt(lang, "mistakesSub", child)}</p>
@@ -344,8 +344,8 @@ function ParentHome() {
             ) : (
               <ul className="mt-4 space-y-3">
                 {data.weakAreas.map((m) => (
-                  <li key={`m-${m.id}`} className="rounded-xl border border-tomato/40 bg-card p-4 shadow-soft">
-                    <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-tomato/10 px-2 py-0.5 text-xs font-semibold text-tomato">
+                  <li key={`m-${m.id}`} className="rounded-xl border border-destructive/40 bg-card p-4 shadow-soft">
+                    <span className="mb-2 inline-flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
                       <Target className="h-3 w-3" />
                       {pt(lang, "childToo", child)}
                     </span>

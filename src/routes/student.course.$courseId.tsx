@@ -80,15 +80,25 @@ function CoursePage() {
         <p className="text-muted-foreground">{course.subject}{course.teacherName ? ` · ${course.teacherName}` : ""}</p>
       </div>
 
-      <div className="surface flex flex-wrap items-center gap-3 p-4">
+      <div
+        className={`surface flex flex-wrap items-center gap-3 p-4 ${
+          course.liveSession ? "border-success/40 bg-success-soft/30 ring-1 ring-success/15" : ""
+        }`}
+      >
         {course.liveSession ? (
           <>
-            <span className="flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success"><span className="live-dot" /> {t(lang, "liveNow")}</span>
+            <span className="flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success-foreground">
+              <span className="live-dot" /> {t(lang, "liveNow")}
+            </span>
             <span className="text-sm font-medium">{course.liveSession.title}</span>
-            <span className="ml-auto"><JoinLiveButton sessionId={course.liveSession.id} /></span>
+            <span className="ms-auto">
+              <JoinLiveButton sessionId={course.liveSession.id} />
+            </span>
           </>
         ) : (
-          <span className="flex items-center gap-2 text-sm text-muted-foreground"><Radio className="h-4 w-4" /> {t(lang, "noLive")}</span>
+          <span className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Radio className="h-4 w-4" aria-hidden /> {t(lang, "noLive")}
+          </span>
         )}
       </div>
 
@@ -137,8 +147,23 @@ function CoursePage() {
 function Due({ at }: { at: string }) {
   const { lang } = useLanguage();
   const d = new Date(at);
-  const overdue = d.getTime() < Date.now();
-  return <span className={overdue ? "text-destructive" : undefined}>{t(lang, "due")}: {d.toLocaleString()}</span>;
+  const ms = d.getTime() - Date.now();
+  const overdue = ms < 0;
+  const dueSoon = !overdue && ms < 1000 * 60 * 60 * 48; // within 48h
+  return (
+    <span
+      className={
+        overdue
+          ? "font-semibold text-destructive"
+          : dueSoon
+            ? "font-semibold text-alert-foreground"
+            : undefined
+      }
+    >
+      {overdue ? `${t(lang, "overdue")} · ` : dueSoon ? `${t(lang, "dueSoon")} · ` : ""}
+      {t(lang, "due")}: {d.toLocaleString()}
+    </span>
+  );
 }
 
 function HomeworkCard({ hw, onSaved }: { hw: MyHomework; onSaved: () => void }) {
@@ -178,13 +203,26 @@ function HomeworkCard({ hw, onSaved }: { hw: MyHomework; onSaved: () => void }) 
           <h3 className="font-semibold">{hw.title}</h3>
           <p className="mt-1 text-xs text-muted-foreground"><Due at={hw.dueAt} /> · {hw.totalMarks} {t(lang, "marks")}</p>
         </div>
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium">{statusLabel}</span>
+        <span
+          className={
+            !sub
+              ? "rounded-full bg-alert-soft px-2.5 py-1 text-xs font-semibold text-alert-foreground"
+              : sub.status === "graded"
+                ? "rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success-foreground"
+                : "rounded-full bg-sky-soft px-2.5 py-1 text-xs font-semibold text-sky"
+          }
+        >
+          {statusLabel}
+        </span>
       </div>
       {hw.description && <p className="mt-3 text-sm text-muted-foreground">{hw.description}</p>}
       {hw.attachmentName && <p className="mt-2 text-xs text-muted-foreground">📎 {hw.attachmentName}</p>}
       {sub?.released && sub.marks != null && (
-        <p className="mt-3 rounded-lg bg-success-soft px-3 py-2 text-sm">
-          <b>{sub.marks}/{hw.totalMarks}</b>{sub.feedback ? ` · ${sub.feedback}` : ""}
+        <p className="mt-3 rounded-lg bg-success-soft px-3 py-2 text-sm text-success-foreground">
+          <b className="font-display text-lg tabular-nums">
+            {sub.marks}/{hw.totalMarks}
+          </b>
+          {sub.feedback ? ` · ${sub.feedback}` : ""}
         </p>
       )}
       {sub && !sub.released && sub.status === "graded" && <p className="mt-3 text-xs text-muted-foreground">{t(lang, "awaitingRelease")}</p>}
@@ -264,17 +302,21 @@ function QuizCard({ quiz, onSubmitted }: { quiz: MyQuiz; onSubmitted: () => void
       </div>
 
       {(result || quiz.attempt) && (
-        <div className="mt-3 rounded-lg bg-muted px-3 py-2 text-sm">
+        <div className="mt-3 rounded-lg border border-success/20 bg-success-soft/50 px-3 py-3 text-sm">
           {result ? (
             <>
-              <p><b>{t(lang, "yourScore")}: {result.autoScore}/{result.autoTotal}</b>{result.total > result.autoTotal ? ` (+ ${result.total - result.autoTotal} ${t(lang, "marks")} marked by your teacher)` : ""}</p>
-              <p className="mt-1 text-xs text-muted-foreground">{t(lang, "awaitingRelease")}</p>
+              <p className="font-display text-2xl font-semibold tabular-nums text-success-foreground">
+                {result.autoScore}/{result.autoTotal}
+              </p>
+              <p className="mt-0.5 text-xs font-medium text-muted-foreground">{t(lang, "yourScore")}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{t(lang, "awaitingRelease")}</p>
             </>
           ) : quiz.attempt?.released ? (
             <p className="text-xs text-muted-foreground">{t(lang, "grades")} →</p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              {quiz.attempt?.autoScore != null ? `${t(lang, "yourScore")}: ${quiz.attempt.autoScore}. ` : ""}{t(lang, "awaitingRelease")}
+              {quiz.attempt?.autoScore != null ? `${t(lang, "yourScore")}: ${quiz.attempt.autoScore}. ` : ""}
+              {t(lang, "awaitingRelease")}
             </p>
           )}
         </div>
@@ -310,13 +352,24 @@ function QuizCard({ quiz, onSubmitted }: { quiz: MyQuiz; onSubmitted: () => void
       )}
 
       {result && (
-        <ul className="mt-3 space-y-1 text-sm">
-          {quiz.questions.filter((q) => q.id in result.correct).map((q, i) => (
-            <li key={q.id} className="flex items-center gap-2">
-              {result.correct[q.id] ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-destructive" />}
-              <span className="truncate">{i + 1}. {q.prompt}</span>
-            </li>
-          ))}
+        <ul className="mt-3 space-y-1.5 text-sm" aria-label={t(lang, "yourScore")}>
+          {quiz.questions
+            .filter((q) => q.id in result.correct)
+            .map((q, i) => (
+              <li
+                key={q.id}
+                className={`flex items-center gap-2 rounded-lg px-2 py-1.5 ${
+                  result.correct[q.id] ? "bg-success-soft/60" : "bg-destructive/5"
+                }`}
+              >
+                {result.correct[q.id] ? (
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-success" aria-label={t(lang, "correct")} />
+                ) : (
+                  <XCircle className="h-4 w-4 shrink-0 text-destructive" aria-label={t(lang, "incorrect")} />
+                )}
+                <span className="truncate text-start">{i + 1}. {q.prompt}</span>
+              </li>
+            ))}
         </ul>
       )}
     </div>

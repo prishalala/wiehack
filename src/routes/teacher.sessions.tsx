@@ -136,7 +136,13 @@ function Sessions() {
                 <option key={c.id} value={c.id}>{c.name} ({c.code})</option>
               ))}
             </select>
-            {course && <p className="text-xs text-muted-foreground">{course.studentIds.length} enrolled student(s) will be able to join.</p>}
+            {course && (
+              <p className="flex items-center gap-1.5 text-sm font-medium text-foreground">
+                <Users className="h-3.5 w-3.5 text-sky" aria-hidden />
+                <span className="font-display text-base tabular-nums">{course.studentIds.length}</span> enrolled student
+                {course.studentIds.length === 1 ? "" : "s"} can join
+              </p>
+            )}
             {errors.subject && <p className="text-sm text-destructive">{errors.subject}</p>}
           </div>
           <div className="space-y-2">
@@ -150,12 +156,12 @@ function Sessions() {
           <Button type="submit" disabled={busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} Create session</Button>
         </form>
 
-        <div className="surface h-fit p-6">
+        <div className={`surface h-fit p-6 ${session.status === "live" ? "border-success/40 ring-1 ring-success/15" : ""}`}>
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current session</p>
-          <h2 className="mt-2 font-display text-xl font-semibold">{session.title}</h2>
+          <h2 className="mt-2 font-display text-2xl font-semibold">{session.title}</h2>
           <p className="text-sm text-muted-foreground">{sessionCourse ? `${sessionCourse.name} (${sessionCourse.code})` : session.subject || "—"}</p>
-          <div className="mt-5 flex items-center gap-3 rounded-xl bg-muted p-4 text-sm">
-            <Users className="h-5 w-5 shrink-0 text-primary" />
+          <div className="mt-5 flex items-center gap-3 rounded-xl bg-sky-soft/60 p-4 text-sm">
+            <Users className="h-5 w-5 shrink-0 text-sky" aria-hidden />
             <span>{sessionCourse ? `Students enrolled in ${sessionCourse.name} join from their course page once you start.` : "Students join from their course page once you start."}</span>
           </div>
           {session.notesLocalized && (
@@ -181,18 +187,44 @@ function Sessions() {
             )}
           </div>
           <div className="mt-5 flex items-center justify-between text-sm">
-            <span className="flex items-center gap-2">{session.status === "live" ? <span className="live-dot" /> : <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />}<span className="capitalize">{session.status === "draft" ? "Not started" : session.status}</span></span>
-            <span className="text-muted-foreground">{students.length} joined</span>
+            <span className="flex items-center gap-2 font-medium">
+              {session.status === "live" ? (
+                <span className="live-dot" />
+              ) : (
+                <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+              )}
+              <span className={session.status === "live" ? "text-success-foreground" : "capitalize"}>
+                {session.status === "draft" ? "Not started" : session.status}
+              </span>
+            </span>
+            <span className="font-display text-lg font-semibold tabular-nums">
+              {students.length} <span className="text-sm font-sans font-normal text-muted-foreground">joined</span>
+            </span>
           </div>
           <div className="mt-4 grid gap-2">
             {!session.id ? (
               <p className="text-sm text-muted-foreground">Create a lesson for one of your courses first.</p>
             ) : session.status !== "live" ? (
-              <Button onClick={() => setSessionStatus("live").then(() => toast.success("Session is live")).catch((e) => toast.error(e.message))}><Play className="h-4 w-4" /> Start session</Button>
+              <Button
+                size="lg"
+                className="h-12 text-base"
+                onClick={() => setSessionStatus("live").then(() => toast.success("Session is live")).catch((e) => toast.error(e.message))}
+              >
+                <Play className="h-5 w-5" aria-hidden /> Start lesson
+              </Button>
             ) : (
               <>
-                <Button asChild><Link to="/teacher/live">Open live view</Link></Button>
-                <Button variant="outline" onClick={() => setSessionStatus("ended").then(() => toast("Session ended")).catch((e) => toast.error(e.message))}><Square className="h-4 w-4" /> End session</Button>
+                <Button asChild size="lg" className="h-12 text-base">
+                  <Link to="/teacher/live">Open live view</Link>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="h-11"
+                  onClick={() => setSessionStatus("ended").then(() => toast("Session ended")).catch((e) => toast.error(e.message))}
+                >
+                  <Square className="h-4 w-4" aria-hidden /> End lesson
+                </Button>
               </>
             )}
           </div>

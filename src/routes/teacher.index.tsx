@@ -93,14 +93,14 @@ function Overview() {
         </div>
       </div>
 
-      <div className="surface relative overflow-hidden p-6">
+      <div className={`surface relative overflow-hidden p-6 ${session.status === "live" ? "border-success/30 ring-1 ring-success/15" : ""}`}>
         <div className="dot-grid absolute inset-0 opacity-60 [mask-image:linear-gradient(to_left,black,transparent_60%)]" />
         <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-sm font-medium">
               {session.status === "live" ? (
                 <>
-                  <span className="live-dot" /> Live now
+                  <span className="live-dot" /> <span className="text-success-foreground">Live now</span>
                 </>
               ) : (
                 <span className="text-muted-foreground">Session {session.status}</span>
@@ -108,15 +108,20 @@ function Overview() {
             </div>
             <h2 className="mt-2 font-display text-2xl font-semibold">{session.title}</h2>
             <p className="text-muted-foreground">{session.subject}</p>
+            <p className="mt-2 flex items-center gap-1.5 text-sm">
+              <Users className="h-3.5 w-3.5 text-sky" aria-hidden />
+              <span className="font-display text-base font-semibold tabular-nums">{students.length}</span>
+              <span className="text-muted-foreground">students joined</span>
+            </p>
           </div>
           <div className="flex items-center gap-6">
             <div>
               <p className="text-xs uppercase tracking-wider text-muted-foreground">Join code</p>
               <p className="font-mono text-2xl font-semibold tracking-[0.2em]">{session.joinCode}</p>
             </div>
-            <Button asChild variant="outline" className="bg-card">
-              <Link to="/teacher/live">
-                Open session <ArrowRight className="h-4 w-4" />
+            <Button asChild className={session.status === "live" ? undefined : "bg-card"} variant={session.status === "live" ? "default" : "outline"}>
+              <Link to={session.status === "live" ? "/teacher/live" : "/teacher/sessions"}>
+                {session.status === "live" ? "Open live view" : "Start a lesson"} <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
           </div>

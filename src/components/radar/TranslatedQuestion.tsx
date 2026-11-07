@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { AlertTriangle, ChevronDown, Loader2, RotateCw } from "lucide-react";
+import { AlertTriangle, ChevronDown, Loader2, RotateCw, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { translateQuestionToEnglish } from "@/api";
 import type { StudentQuestion } from "@/types";
@@ -30,24 +30,35 @@ export function TranslatedQuestion({ q, quoted = false }: { q: StudentQuestion; 
 
   return (
     <div className="min-w-0">
-      <p className="whitespace-pre-wrap text-sm">{wrap(primary)}</p>
+      {translated && (
+        <span className="ai-label mb-1.5">
+          <Sparkles className="h-3 w-3" aria-hidden />
+          AI-translated
+        </span>
+      )}
+      <p className={cn("whitespace-pre-wrap text-[15px] leading-relaxed", translated && "text-foreground")}>
+        {wrap(primary)}
+      </p>
 
       {status === "pending" && (
-        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-          <Loader2 className="h-3 w-3 animate-spin" /> Translating to English…
+        <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-alert-foreground" role="status">
+          <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
+          Translating…
         </p>
       )}
 
       {status === "failed" && (
-        <p className="mt-1 flex flex-wrap items-center gap-1 text-xs text-alert-foreground">
-          <AlertTriangle className="h-3 w-3" /> English translation unavailable — showing the original.
+        <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs font-medium text-destructive" role="alert">
+          <AlertTriangle className="h-3.5 w-3.5 shrink-0" aria-hidden />
+          Translation unavailable
           <button
             type="button"
             onClick={retry}
             disabled={retrying}
-            className="inline-flex items-center gap-1 rounded px-1 font-medium underline-offset-2 hover:underline disabled:opacity-60"
+            className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 font-semibold underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
           >
-            {retrying ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />} Retry
+            {retrying ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
+            Retry
           </button>
         </p>
       )}
@@ -58,15 +69,17 @@ export function TranslatedQuestion({ q, quoted = false }: { q: StudentQuestion; 
             type="button"
             onClick={() => setOpen((o) => !o)}
             aria-expanded={open}
-            className="mt-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            className="mt-1.5 inline-flex items-center gap-1 text-xs font-medium text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <ChevronDown className={cn("h-3 w-3 transition-transform", open && "rotate-180")} />
-            {open ? "Hide original" : `Show original${q.detectedLanguage && q.detectedLanguage !== "unknown" ? ` (${q.detectedLanguage})` : ""}`}
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-150", open && "rotate-180")} />
+            {open
+              ? "Hide original"
+              : `Show original${q.detectedLanguage && q.detectedLanguage !== "unknown" ? ` (${q.detectedLanguage})` : ""}`}
           </button>
           {open && (
-            <p className="mt-1 whitespace-pre-wrap rounded-md border-l-2 border-primary/40 bg-muted/60 px-2 py-1 text-sm">
+            <p className="mt-1.5 whitespace-pre-wrap rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm text-start" dir="auto">
               {wrap(q.text)}
-              {q.isRomanized && <span className="ml-2 text-xs text-muted-foreground">· romanized</span>}
+              {q.isRomanized && <span className="ms-2 text-xs text-muted-foreground">· romanized</span>}
             </p>
           )}
         </>

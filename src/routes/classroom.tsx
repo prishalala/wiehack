@@ -59,9 +59,16 @@ function ClassroomGate() {
     if (!loading && !student) void navigate({ to: "/student/login" });
   }, [loading, student, navigate]);
   if (loading || !student) {
-    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Checking your sign-in…</div>;
+    return <ClassroomLoading />;
   }
   return <Classroom />;
+}
+
+function ClassroomLoading() {
+  const { lang } = useLanguage();
+  return (
+    <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">{t(lang, "checkingSignIn")}</div>
+  );
 }
 
 const MAX = 500;
@@ -108,9 +115,9 @@ function Classroom() {
       <div className="grid min-h-screen place-items-center p-6 text-center">
         <div className="surface max-w-sm p-8">
           <BookOpen className="mx-auto h-6 w-6 text-primary" />
-          <h1 className="mt-3 font-display text-xl font-semibold">No live lesson open</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Open one of your courses and press “Join live lesson” when your teacher starts it.</p>
-          <Button asChild className="mt-5"><Link to="/student">My courses</Link></Button>
+          <h1 className="mt-3 font-display text-xl font-semibold">{t(lang, "noLiveLessonTitle")}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">{t(lang, "noLiveLessonBody")}</p>
+          <Button asChild className="mt-5"><Link to="/student">{t(lang, "myCourses")}</Link></Button>
         </div>
       </div>
     );
@@ -147,14 +154,14 @@ function Classroom() {
             <p className="text-xs font-semibold uppercase tracking-wider text-primary">{t(lang, "lesson")} · {state.session.subject}</p>
             <h1 className="mt-2 font-display text-3xl font-semibold">{state.session.title}</h1>
             {translating && (
-              <p className="mt-3 inline-flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> {t(lang, "translating")}
+              <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-alert-soft px-2.5 py-1 text-sm font-medium text-alert-foreground" role="status">
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> {t(lang, "translating")}
               </p>
             )}
             {translateError && (
-              <p className="mt-3 text-sm text-destructive" role="alert">{translateError}</p>
+              <p className="mt-3 text-sm font-medium text-destructive" role="alert">{translateError}</p>
             )}
-            <div className="mt-6 max-w-prose space-y-4 text-[17px] leading-relaxed">
+            <div className="mt-6 max-w-prose space-y-4 text-[17px] leading-relaxed text-start" dir="auto">
               {hasLessonContent ? (
                 <p className="whitespace-pre-wrap">{localizedNotes}</p>
               ) : (
@@ -168,13 +175,15 @@ function Classroom() {
           <ExplanationPanel hasNotes={hasLessonContent} />
 
           <section className="surface p-6" aria-labelledby="act-h">
-            <h2 id="act-h" className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> {t(lang, "sharedActivity")}</h2>
+            <h2 id="act-h" className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-ai" aria-hidden /> {t(lang, "sharedActivity")}</h2>
             {shared.length === 0 ? (
               <p className="mt-3 rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">{t(lang, "noActivity")}</p>
             ) : (
               <div className="mt-5 space-y-10">
                 {shared.map((a) => (
-                  <SharedActivityBlock key={a.id + lang} activity={a} lang={lang} studentId={student.id} />
+                  <div key={a.id + lang} className="feed-in rounded-xl border border-ai/25 bg-ai-soft/30 p-4 ring-2 ring-ai/10">
+                    <SharedActivityBlock activity={a} lang={lang} studentId={student.id} />
+                  </div>
                 ))}
               </div>
             )}
@@ -189,11 +198,13 @@ function Classroom() {
             {mine.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">{t(lang, "noQuestions")}</p> : (
               <ul className="mt-3 space-y-3">
                 {mine.map((q) => (
-                  <li key={q.id} className="rounded-lg border p-3">
-                    <p className="whitespace-pre-wrap text-sm">{q.text}</p>
-                    <p className={cn("mt-2 inline-flex items-center gap-1 text-xs font-medium", q.status === "answered" ? "text-success" : q.status === "analyzed" ? "text-sky" : "text-alert-foreground")}>
-                      {q.status === "answered" ? <><CheckCircle2 className="h-3 w-3" />{t(lang, "answered")}</> : q.status === "analyzed" ? <><Eye className="h-3 w-3" />{t(lang, "seen")}</> : <><Clock className="h-3 w-3" />{t(lang, "pending")}</>}
-                      {q.isAnonymous && <span className="ml-2 text-muted-foreground">· anonymous</span>}
+                  <li key={q.id} className="feed-in rounded-lg border p-3">
+                    <p className="whitespace-pre-wrap text-sm text-start" dir="auto">{q.text}</p>
+                    <p className={cn(
+                      "mt-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold",
+                      q.status === "answered" ? "bg-success-soft text-success-foreground" : q.status === "analyzed" ? "bg-sky-soft text-sky" : "bg-alert-soft text-alert-foreground",
+                    )}>
+                      {q.status === "answered" ? <><CheckCircle2 className="h-3 w-3" aria-hidden />{t(lang, "answered")}</> : q.status === "analyzed" ? <><Eye className="h-3 w-3" aria-hidden />{t(lang, "seen")}</> : <><Clock className="h-3 w-3" aria-hidden />{t(lang, "pending")}</>}
                     </p>
                     <QuestionAnswer q={q} lang={lang} />
                   </li>
@@ -214,28 +225,32 @@ function QuestionAnswer({ q, lang }: { q: StudentQuestion; lang: string }) {
   const needs = answerNeedsTranslate(q, lang);
 
   return (
-    <div className="mt-2 rounded-md bg-muted p-2">
-      <p className="text-sm leading-relaxed">{needs ? (q.answer ?? "") : (text ?? "")}</p>
+    <div className="mt-2 rounded-lg border border-ai/20 bg-ai-soft p-2.5">
+      <span className="ai-label mb-1.5">
+        <Sparkles className="h-3 w-3" aria-hidden />
+        {t(lang, "aiSuggestion")}
+      </span>
+      <p className="text-sm leading-relaxed text-ai-foreground text-start" dir="auto">{needs ? (q.answer ?? "") : (text ?? "")}</p>
       {needs && (
         <Button
           type="button"
           size="sm"
           variant="ghost"
-          className="mt-2 h-7 px-2 text-xs"
+          className="mt-2 h-7 px-2 text-xs text-ai-foreground"
           disabled={busy}
           onClick={async () => {
             setBusy(true);
             try {
               await translateAnswer(q.id, lang);
             } catch (err) {
-              toast.error(err instanceof Error ? err.message : "Translate failed");
+              toast.error(err instanceof Error ? err.message : t(lang, "error"));
             } finally {
               setBusy(false);
             }
           }}
         >
           {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Languages className="h-3 w-3" />}
-          Translate
+          {t(lang, "translateAnswer")}
         </Button>
       )}
     </div>
@@ -278,16 +293,17 @@ function SharedActivityBlock({ activity, lang, studentId }: { activity: Activity
 }
 
 function UnderstandingCheck({ sessionId, studentId }: { sessionId: string; studentId: string }) {
+  const { lang } = useLanguage();
   const current = useMySignal(sessionId, studentId);
-  const options: { id: UnderstandingSignal; label: string }[] = [
-    { id: "understand", label: "I understand" },
-    { id: "example", label: "Need another example" },
-    { id: "confused", label: "I'm confused" },
+  const options: { id: UnderstandingSignal; labelKey: "understand" | "needExample" | "confused" }[] = [
+    { id: "understand", labelKey: "understand" },
+    { id: "example", labelKey: "needExample" },
+    { id: "confused", labelKey: "confused" },
   ];
   return (
     <section className="surface p-5">
-      <h2 className="text-sm font-semibold">How are you doing?</h2>
-      <p className="mt-1 text-xs text-muted-foreground">Only your teacher sees this — not classmates.</p>
+      <h2 className="text-sm font-semibold">{t(lang, "howDoing")}</h2>
+      <p className="mt-1 text-xs text-muted-foreground">{t(lang, "onlyTeacherSees")}</p>
       <div className="mt-3 flex flex-col gap-2">
         {options.map((o) => (
           <button
@@ -295,14 +311,14 @@ function UnderstandingCheck({ sessionId, studentId }: { sessionId: string; stude
             type="button"
             onClick={() => {
               setUnderstandingSignal(sessionId, studentId, o.id);
-              toast.success("Sent to teacher");
+              toast.success(t(lang, "signalSent"));
             }}
             className={cn(
-              "rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
+              "rounded-lg border px-3 py-2 text-start text-sm transition-colors duration-150 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
               current === o.id && "border-primary bg-primary-soft",
             )}
           >
-            {o.label}
+            {t(lang, o.labelKey)}
           </button>
         ))}
       </div>
@@ -339,16 +355,16 @@ function QuestionComposer({ studentId, studentName }: { studentId: string; stude
     }
   }
   return (
-    <form onSubmit={submit} className="surface p-6">
-      <h2 className="flex items-center gap-2 font-semibold"><Lightbulb className="h-4 w-4 text-alert" /> {t(lang, "askPrivately")}</h2>
+    <form onSubmit={submit} className="surface border-primary/20 p-6 shadow-lift ring-1 ring-primary/10">
+      <h2 className="flex items-center gap-2 font-display text-lg font-semibold"><Lightbulb className="h-4 w-4 text-alert" aria-hidden /> {t(lang, "askPrivately")}</h2>
       <p className="mt-1 text-sm text-muted-foreground">{t(lang, "askHint")}</p>
       <Textarea value={text} onChange={(e) => setText(e.target.value)} rows={4} placeholder={t(lang, "placeholder")} aria-label={t(lang, "askPrivately")}
-        className="mt-4 resize-none text-[15px]" spellCheck={false} autoCorrect="off" onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(e); }} />
+        className="mt-4 resize-none text-[15px]" spellCheck={false} autoCorrect="off" dir="auto" onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) submit(e); }} />
       <div className="mt-3 flex items-center gap-2">
         <Checkbox id="anon" checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} />
-        <Label htmlFor="anon" className="text-sm font-normal text-muted-foreground">Ask anonymously (teacher won’t see your name)</Label>
+        <Label htmlFor="anon" className="text-sm font-normal text-muted-foreground">{t(lang, "askAnonymously")}</Label>
       </div>
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-3 flex items-center justify-between gap-3">
         <span className={cn("text-xs tabular-nums", len > MAX ? "text-destructive" : "text-muted-foreground")}>{len}/{MAX} {t(lang, "chars")}</span>
         <Button type="submit" disabled={!valid || busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {t(lang, "submit")}</Button>
       </div>
@@ -391,8 +407,9 @@ function ExplanationPanel({ hasNotes }: { hasNotes: boolean }) {
 
   return (
     <section className="surface overflow-hidden" aria-live="polite">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-primary-soft/50 px-6 py-4">
-        <h2 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4 text-primary" /> {t(lang, "explanation")}</h2>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-ai/15 bg-ai-soft/50 px-6 py-4">
+        <h2 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4 text-ai" aria-hidden /> {t(lang, "explanation")}</h2>
+        <span className="ai-label"><Sparkles className="h-3 w-3" aria-hidden />{t(lang, "aiSuggestion")}</span>
       </div>
       <div className="min-h-[160px] p-6">
         {status === "idle" && (

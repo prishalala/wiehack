@@ -15,6 +15,7 @@ export function JoinLiveButton({ sessionId }: { sessionId: string }) {
   return (
     <Button
       size="sm"
+      className="bg-success text-primary-foreground hover:bg-success/90"
       disabled={busy}
       onClick={async () => {
         setBusy(true);
@@ -22,13 +23,13 @@ export function JoinLiveButton({ sessionId }: { sessionId: string }) {
           await joinLiveLesson({ sessionId, language: lang });
           void navigate({ to: "/classroom" });
         } catch (err) {
-          toast.error(err instanceof Error ? err.message : "Could not join the lesson");
+          toast.error(err instanceof Error ? err.message : t(lang, "error"));
           setBusy(false);
         }
       }}
     >
-      {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Radio className="h-4 w-4" />}
-      {busy ? t(lang, "joining") : t(lang, "joinLive")}
+      {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <Radio className="h-4 w-4" aria-hidden />}
+      {busy ? t(lang, "joining") : t(lang, "liveJoinCta")}
     </Button>
   );
 }
