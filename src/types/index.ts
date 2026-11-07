@@ -18,6 +18,7 @@ export type Session = {
   status: SessionStatus;
   created_at: string;
   started_at: string | null;
+  course_id?: string | null;
 };
 
 export type Student = {
@@ -26,6 +27,8 @@ export type Student = {
   name: string;
   language: Lang;
   created_at: string;
+  /** Institution account this participant signed in with. */
+  person_id?: string | null;
 };
 
 export type Question = {
@@ -106,6 +109,7 @@ export type ClassroomSession = {
   status: SessionStatus;
   createdAt: number;
   startedAt?: number | undefined;
+  courseId?: string | null | undefined;
 };
 
 export type DetectedLanguage = string;
@@ -204,6 +208,7 @@ export function sessionToUi(s: Session): ClassroomSession {
     notesLocalized: s.notes_localized,
     joinCode: s.code,
     status: s.status,
+    courseId: s.course_id ?? null,
     createdAt: Date.parse(s.created_at) || Date.now(),
     ...(s.started_at ? { startedAt: Date.parse(s.started_at) } : {}),
   };

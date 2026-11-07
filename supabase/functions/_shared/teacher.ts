@@ -29,12 +29,47 @@ function timingSafeEqual(a: string, b: string): boolean {
   return diff === 0;
 }
 
-/** Throws 401/403 unless the request carries the teacher token for this session. */
+/** Directory record of the signed-in caller (from the Supabase Auth JWT), or null. */
+export async function callerPerson(
+  req: Request,
+  supabase: SupabaseClient,
+): Promise<{ id: string; email: string; role: string; full_name: string } | null> {
+  const jwt = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim();
+  if (!jwt) return null;
+  const { data, error } = await supabase.auth.getUser(jwt);
+  const email = data?.user?.email?.toLowerCase();
+  if (error || !email) return null; // anon key or expired token
+  const { data: person } = await supabase
+    .from("people")
+    .select("id, email, role, full_name")
+    .eq("email", email)
+    .maybeSingle();
+  return (person as { id: string; email: string; role: string; full_name: string } | null) ?? null;
+}
+
+/** True when the signed-in caller teaches the course this session belongs to. */
+async function isSessionCourseTeacher(req: Request, supabase: SupabaseClient, sessionId: string): Promise<boolean> {
+  const me = await callerPerson(req, supabase);
+  if (!me || me.role !== "teacher") return false;
+  const { data } = await supabase
+    .from("sessions")
+    .select("course_id, courses!inner(teacher_id)")
+    .eq("id", sessionId)
+    .maybeSingle();
+  const teacherId = (data as { courses?: { teacher_id?: string } } | null)?.courses?.teacher_id;
+  return Boolean(teacherId && teacherId === me.id);
+}
+
+/**
+ * Throws 401/403 unless the caller is this session's teacher: either the signed-in
+ * teacher of the session's course, or the per-session teacher key from creation.
+ */
 export async function requireTeacher(
   req: Request,
   supabase: SupabaseClient,
   sessionId: string,
 ): Promise<void> {
+  if (await isSessionCourseTeacher(req, supabase, sessionId)) return;
   const token = req.headers.get(TEACHER_TOKEN_HEADER)?.trim();
   if (!token) throw new HttpError("Teacher access required for this action.", 401);
 

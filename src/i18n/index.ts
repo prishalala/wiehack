@@ -1,6 +1,7 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import type { Lang } from "@/types";
 import { isKnownLang, LANGUAGES } from "@/lib/languages";
+import { looksUntranslated, translateUiTexts } from "@/services/translateUi";
 
 export { LANGUAGES } from "@/lib/languages";
 
@@ -18,6 +19,15 @@ const chrome = {
     leave: "Leave", hello: "Hi", sample: "Sample explanation",
     whole: "Same-size whole", pieceOf: "One piece of", compare: "Compare", isBigger: "is bigger than",
     translating: "Translating lesson…",
+    noLessonContent: "Your instructor hasn't made any lesson content available yet.",
+    noExplanation: "Explanations appear once your instructor shares lesson notes.",
+    myCourses: "My courses", coursesHint: "Courses you're enrolled in this term.", liveNow: "Live now", joinLive: "Join live lesson",
+    noLive: "No live lesson right now", homework: "Homework", quizzes: "Quizzes & tests", grades: "Grades", due: "Due",
+    submitHw: "Submit homework", resubmit: "Update submission", submitted: "Submitted", graded: "Graded", notSubmitted: "Not submitted",
+    noHomework: "No homework assigned yet.", noQuizzes: "No quizzes or tests yet.", noGrades: "No grades released yet.",
+    startQuiz: "Start", submitQuiz: "Submit answers", yourScore: "Auto-marked score", awaitingRelease: "Final grade appears when your teacher releases it.",
+    answerHere: "Your answer", marks: "marks", signOut: "Sign out", backToCourses: "All courses", feedback: "Teacher feedback",
+    joining: "Joining…", noCourses: "You aren't enrolled in any courses yet.", released: "Released",
   },
   hi: {
     live: "लाइव", lesson: "पाठ", currentTopic: "वर्तमान विषय", notes: "शिक्षक के नोट्स",
@@ -32,6 +42,15 @@ const chrome = {
     leave: "बाहर जाएँ", hello: "नमस्ते", sample: "नमूना व्याख्या",
     whole: "एक जैसा पूरा", pieceOf: "एक टुकड़ा", compare: "तुलना", isBigger: "बड़ा है",
     translating: "पाठ अनुवाद हो रहा है…",
+    noLessonContent: "आपके शिक्षक ने अभी कोई पाठ सामग्री उपलब्ध नहीं कराई है।",
+    noExplanation: "जब शिक्षक पाठ नोट्स साझा करेंगे, व्याख्या यहाँ दिखेगी।",
+    myCourses: "मेरे पाठ्यक्रम", coursesHint: "इस सत्र में आपके नामांकित पाठ्यक्रम।", liveNow: "अभी लाइव", joinLive: "लाइव पाठ में जुड़ें",
+    noLive: "अभी कोई लाइव पाठ नहीं", homework: "गृहकार्य", quizzes: "क्विज़ और टेस्ट", grades: "अंक", due: "अंतिम तिथि",
+    submitHw: "गृहकार्य जमा करें", resubmit: "जमा किया गया बदलें", submitted: "जमा किया", graded: "जाँचा गया", notSubmitted: "जमा नहीं किया",
+    noHomework: "अभी कोई गृहकार्य नहीं।", noQuizzes: "अभी कोई क्विज़ या टेस्ट नहीं।", noGrades: "अभी कोई अंक जारी नहीं हुए।",
+    startQuiz: "शुरू करें", submitQuiz: "उत्तर जमा करें", yourScore: "स्वतः जाँचे गए अंक", awaitingRelease: "अंतिम अंक शिक्षक के जारी करने पर दिखेंगे।",
+    answerHere: "आपका उत्तर", marks: "अंक", signOut: "साइन आउट", backToCourses: "सभी पाठ्यक्रम", feedback: "शिक्षक की टिप्पणी",
+    joining: "जुड़ रहे हैं…", noCourses: "आप अभी किसी पाठ्यक्रम में नामांकित नहीं हैं।", released: "जारी",
   },
   fr: {
     live: "En direct", lesson: "Leçon", currentTopic: "Sujet actuel", notes: "Notes de l'enseignant",
@@ -46,37 +65,34 @@ const chrome = {
     leave: "Quitter", hello: "Salut", sample: "Explication exemple",
     whole: "Tout de même taille", pieceOf: "Une part de", compare: "Comparer", isBigger: "est plus grand que",
     translating: "Traduction de la leçon…",
+    noLessonContent: "Ton enseignant n'a pas encore partagé de contenu de leçon.",
+    noExplanation: "Les explications apparaîtront quand ton enseignant partagera des notes.",
+    myCourses: "Mes cours", coursesHint: "Les cours auxquels tu es inscrit ce trimestre.", liveNow: "En direct", joinLive: "Rejoindre la leçon",
+    noLive: "Pas de leçon en direct", homework: "Devoirs", quizzes: "Quiz et tests", grades: "Notes", due: "À rendre",
+    submitHw: "Rendre le devoir", resubmit: "Modifier le rendu", submitted: "Rendu", graded: "Corrigé", notSubmitted: "Non rendu",
+    noHomework: "Aucun devoir pour l'instant.", noQuizzes: "Aucun quiz ni test pour l'instant.", noGrades: "Aucune note publiée.",
+    startQuiz: "Commencer", submitQuiz: "Envoyer les réponses", yourScore: "Score corrigé automatiquement", awaitingRelease: "La note finale apparaîtra quand ton enseignant la publiera.",
+    answerHere: "Ta réponse", marks: "points", signOut: "Se déconnecter", backToCourses: "Tous les cours", feedback: "Commentaire de l'enseignant",
+    joining: "Connexion…", noCourses: "Tu n'es inscrit à aucun cours pour l'instant.", released: "Publiée",
   },
 } as const;
 
 export type DictKey = keyof (typeof chrome)["en"];
 
-/** Chrome UI strings: en/hi/fr localized; all other langs fall back to English. */
-export const t = (lang: Lang, key: DictKey): string => {
-  const table = (chrome as Record<string, Record<string, string>>)[lang];
-  return table?.[key] ?? chrome.en[key];
-};
+type BuiltInChrome = keyof typeof chrome;
+const builtInChrome = (lang: string): lang is BuiltInChrome => lang === "en" || lang === "hi" || lang === "fr";
 
-/** Fallback static lesson (used only when AI translation is not yet available). */
-export const lessonContent: Record<string, { topic: string; sections: { heading: string; body: string }[] }> = {
-  en: {
-    topic: "Comparing unit fractions",
-    sections: [
-      { heading: "What is a fraction?", body: "A fraction shows part of a whole. In 3/4, the whole is divided into 4 equal parts, and we have 3 of them." },
-      { heading: "Numerator and denominator", body: "The top number is the numerator — how many parts we have. The bottom number is the denominator — how many equal parts make the whole." },
-      { heading: "Comparing 1/4 and 1/8", body: "If two wholes are the same size, cutting one into more parts makes each part smaller. That is why 1/8 is smaller than 1/4." },
-    ],
-  },
+/** AI-filled UI labels for languages beyond the built-in en/hi/fr dictionaries. */
+const remoteChrome: Record<string, Partial<Record<DictKey, string>>> = {};
+let chromeTick = 0;
+
+/** Chrome UI strings: en/hi/fr built-in; other langs use AI translation (or English until ready). */
+export const t = (lang: Lang, key: DictKey): string => {
+  if (builtInChrome(lang)) return chrome[lang][key];
+  return remoteChrome[lang]?.[key] ?? chrome.en[key];
 };
 
 export type ExplanationLevel = "standard" | "simple" | "example";
-export const explanations: Record<string, Record<ExplanationLevel, string[]>> = {
-  en: {
-    standard: ["The denominator tells you how many equal parts the whole is split into.", "More parts means each part is smaller.", "So when the numerators are the same, the fraction with the bigger denominator is smaller: 1/8 < 1/4."],
-    simple: ["Imagine one chocolate bar.", "Share it with 4 friends — everyone gets a big piece.", "Share it with 8 friends — everyone gets a small piece.", "More friends sharing = smaller piece."],
-    example: ["Two identical pizzas.", "Pizza A is cut into 4 slices. Pizza B into 8 slices.", "One slice of A = 1/4. One slice of B = 1/8.", "Put them side by side: two slices of B fit inside one slice of A. So 1/4 = 2/8, and 1/4 > 1/8."],
-  },
-};
 
 const LANG_KEY = "classbridge:lang";
 const listeners = new Set<() => void>();
@@ -87,10 +103,14 @@ function readLang(): Lang {
   return "en";
 }
 
+function notify() {
+  listeners.forEach((l) => l());
+}
+
 export function setLang(lang: Lang) {
   if (!isKnownLang(lang)) return;
   window.localStorage.setItem(LANG_KEY, lang);
-  listeners.forEach((l) => l());
+  notify();
 }
 
 export function useLang(): Lang {
@@ -102,6 +122,73 @@ export function useLang(): Lang {
     readLang,
     () => "en",
   );
+}
+
+/** Ensures student UI chrome exists for `lang`. Call once under LanguageProvider / student shell. */
+export function useChromeStrings(lang: Lang): boolean {
+  const [ready, setReady] = useState(() => builtInChrome(lang) || !!remoteChrome[lang]);
+  useEffect(() => {
+    if (builtInChrome(lang) || remoteChrome[lang]) {
+      setReady(true);
+      return;
+    }
+    setReady(false);
+    const cacheKey = `classbridge:chrome-ui:v2:${lang}`;
+    const keys = Object.keys(chrome.en) as DictKey[];
+    const english = keys.map((k) => chrome.en[k]);
+    try {
+      const saved = window.localStorage.getItem(cacheKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as Record<DictKey, string>;
+        const values = keys.map((k) => parsed[k] ?? "");
+        if (!looksUntranslated(english, values)) {
+          remoteChrome[lang] = parsed;
+          chromeTick += 1;
+          notify();
+          setReady(true);
+          return;
+        }
+        window.localStorage.removeItem(cacheKey);
+      }
+    } catch {
+      /* ignore */
+    }
+    let alive = true;
+    void translateUiTexts(lang, english)
+      .then((out) => {
+        const map: Partial<Record<DictKey, string>> = {};
+        keys.forEach((k, i) => {
+          map[k] = out[i]?.trim() || chrome.en[k];
+        });
+        remoteChrome[lang] = map;
+        if (!looksUntranslated(english, keys.map((k) => map[k] ?? ""))) {
+          try {
+            window.localStorage.setItem(cacheKey, JSON.stringify(map));
+          } catch {
+            /* ignore */
+          }
+        }
+        chromeTick += 1;
+        notify();
+        if (alive) setReady(true);
+      })
+      .catch(() => {
+        if (alive) setReady(true);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [lang]);
+  // Subscribe so consumers re-render when remote chrome arrives.
+  useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    () => chromeTick,
+    () => 0,
+  );
+  return ready;
 }
 
 export function langNative(code: Lang): string {

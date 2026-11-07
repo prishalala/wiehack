@@ -9,6 +9,8 @@ import { MisconceptionCard, RadarVisual } from "@/components/radar/Misconception
 import { TranslatedQuestion } from "@/components/radar/TranslatedQuestion";
 import { useMisconceptionAnalysis } from "@/hooks/use-misconception-analysis";
 import { useAppState } from "@/lib/store";
+import { UnderstandingPanel } from "@/components/teacher/UnderstandingPanel";
+import { useSessionSignalCounts } from "@/lib/understandingStore";
 import { markAnswered } from "@/api";
 
 export const Route = createFileRoute("/teacher/live")({
@@ -36,6 +38,7 @@ function Live() {
   const pending = questions.filter((q) => q.status === "pending").sort((a, b) => b.createdAt - a.createdAt);
   const feed = [...questions].sort((a, b) => b.createdAt - a.createdAt);
   const analyzedCount = questions.filter((q) => q.misconceptionId).length;
+  const signalCounts = useSessionSignalCounts(session.id);
 
   return (
     <div className="space-y-6">
@@ -53,6 +56,8 @@ function Live() {
           <div className="surface flex items-center gap-2 px-4 py-2.5 text-sm"><Users className="h-4 w-4 text-sky" /><b>{students.length}</b> joined</div>
         </div>
       </div>
+
+      <UnderstandingPanel counts={signalCounts} totalStudents={students.length} />
 
       <section className="surface overflow-hidden" aria-labelledby="radar-h">
         <div className="grid lg:grid-cols-[300px_1fr]">

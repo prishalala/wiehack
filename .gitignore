@@ -37,3 +37,6 @@ dist-ssr
 # Supabase CLI local state
 supabase/.temp/
 
+# Demo seed IDs (created by npm run demo:seed)
+scripts/.demo-seed.json
+

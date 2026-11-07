@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Globe2, GraduationCap, Lock, MessageSquareText, Radar, School, Shapes } from "lucide-react";
+import { ArrowRight, Globe2, GraduationCap, Heart, Lock, MessageSquareText, Radar, School, Shapes } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DemoBadge, LangChip, Logo } from "@/components/common";
 import { RadarVisual } from "@/components/radar/MisconceptionCard";
@@ -33,8 +33,9 @@ function Landing() {
         <Logo />
         <nav className="flex items-center gap-1 text-sm">
           <a href="#how" className="hidden rounded-md px-3 py-2 text-muted-foreground hover:text-foreground sm:inline">How it works</a>
-          <Button asChild variant="ghost" size="sm"><Link to="/join">Join a class</Link></Button>
-          <Button asChild size="sm"><Link to="/teacher">Teacher portal</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link to="/student/login">Student</Link></Button>
+          <Button asChild variant="ghost" size="sm"><Link to="/parent/login">Parent</Link></Button>
+          <Button asChild size="sm"><Link to="/teacher/login">Teacher sign in</Link></Button>
         </nav>
       </header>
 
@@ -54,8 +55,9 @@ function Landing() {
               ClassBridge lets multilingual students learn and ask questions in their own language, while teachers see — in one view — which ideas the whole class is struggling with.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-12 px-6"><Link to="/teacher"><School className="h-4 w-4" /> I'm a Teacher</Link></Button>
-              <Button asChild size="lg" variant="outline" className="h-12 bg-card px-6"><Link to="/join"><GraduationCap className="h-4 w-4" /> I'm a Student</Link></Button>
+              <Button asChild size="lg" className="h-12 px-6"><Link to="/teacher/login"><School className="h-4 w-4" /> I'm a Teacher</Link></Button>
+              <Button asChild size="lg" variant="outline" className="h-12 bg-card px-6"><Link to="/student/login"><GraduationCap className="h-4 w-4" /> I'm a Student</Link></Button>
+              <Button asChild size="lg" variant="outline" className="h-12 bg-card px-6"><Link to="/parent/login"><Heart className="h-4 w-4" /> I'm a Parent</Link></Button>
             </div>
             <div className="mt-8 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
               <span>Learn in</span>
@@ -74,7 +76,7 @@ function Landing() {
           <p className="mt-2 text-muted-foreground">Three steps from silent confusion to a fixed misconception.</p>
           <ol className="mt-10 grid gap-8 md:grid-cols-3">
             {[
-              ["Start a session", "The teacher shares lesson notes and a six-character join code."],
+              ["Start a live lesson", "The teacher starts a lesson for a course; enrolled students join with one click."],
               ["Students ask privately", "Each student reads in their language and asks whatever confuses them, in any script."],
               ["See the pattern, act on it", "The radar surfaces shared misconceptions; share a mini-lesson in one click."],
             ].map(([title, body], i) => (
@@ -101,7 +103,7 @@ function Landing() {
         <div className="mt-16 flex flex-col items-start justify-between gap-6 rounded-2xl bg-foreground p-8 text-background sm:flex-row sm:items-center">
           <div>
             <h2 className="font-display text-2xl font-semibold">Open the classroom</h2>
-            <p className="mt-1 opacity-75">Create a session as a teacher, then join with the code from another tab as a student.</p>
+            <p className="mt-1 opacity-75">Sign in as a teacher and start a lesson, then sign in as an enrolled student in another tab and join it.</p>
           </div>
           <Button asChild variant="secondary" size="lg"><Link to="/teacher/sessions">Create a session <ArrowRight className="h-4 w-4" /></Link></Button>
         </div>

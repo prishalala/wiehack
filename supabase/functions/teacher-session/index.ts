@@ -1,7 +1,7 @@
 import { corsHeaders, errorResponse, jsonResponse } from "../_shared/cors.ts";
 import { z } from "../_shared/openai.ts";
 import { createServiceClient } from "../_shared/supabase.ts";
-import { HttpError, hashToken, newTeacherToken, requireTeacher, statusOf } from "../_shared/teacher.ts";
+import { callerPerson, HttpError, hashToken, newTeacherToken, requireTeacher, statusOf } from "../_shared/teacher.ts";
 
 /**
  * Teacher-only session operations. `create` issues a teacher token (returned once,
@@ -10,6 +10,7 @@ import { HttpError, hashToken, newTeacherToken, requireTeacher, statusOf } from 
 const RequestSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
+    course_id: z.string().uuid(),
     title: z.string().trim().min(1).max(200),
     subject: z.string().max(120).default(""),
     notes: z.string().max(20000).default(""),
@@ -47,12 +48,25 @@ Deno.serve(async (req) => {
     const supabase = createServiceClient();
 
     if (input.action === "create") {
+      // Only the signed-in teacher of this course can open a live lesson for it.
+      const me = await callerPerson(req, supabase);
+      if (!me) throw new HttpError("Sign in with your institution teacher account.", 401);
+      if (me.role !== "teacher") throw new HttpError("Only teachers can create live lessons.", 403);
+      const { data: course, error: courseErr } = await supabase
+        .from("courses")
+        .select("id, teacher_id")
+        .eq("id", input.course_id)
+        .maybeSingle();
+      if (courseErr) throw new Error(courseErr.message);
+      if (!course || course.teacher_id !== me.id) throw new HttpError("You don't teach this course.", 403);
+
       let session: Record<string, unknown> | null = null;
       for (let attempt = 0; attempt < 5 && !session; attempt++) {
         const { data, error } = await supabase
           .from("sessions")
           .insert({
-            code: generateJoinCode(),
+            code: generateJoinCode(), // internal unique id; students join from their course page
+            course_id: input.course_id,
             title: input.title,
             subject: input.subject,
             notes: input.notes,

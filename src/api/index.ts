@@ -28,7 +28,7 @@ import {
   setStudentId,
   setTeacherToken,
 } from "@/lib/store";
-import { lessonContent, type ExplanationLevel } from "@/i18n";
+import { type ExplanationLevel } from "@/i18n";
 
 const CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
@@ -124,6 +124,7 @@ function teacherHeaders(sessionId: string): Record<string, string> {
 }
 
 export async function createSession(input: {
+  courseId: string;
   title: string;
   subject: string;
   notes: string;
@@ -131,6 +132,7 @@ export async function createSession(input: {
   // Server generates the join code + teacher key; key is returned once and kept in this browser.
   const res = await invokeFunction<{ session: Session; teacher_token: string }>("teacher-session", {
     action: "create",
+    course_id: input.courseId,
     title: input.title,
     subject: input.subject,
     notes: input.notes,
@@ -179,47 +181,27 @@ export async function setSessionStatus(status: ClassroomSession["status"]): Prom
 
 export class JoinError extends Error {}
 
-export async function joinSession(input: {
-  code: string;
-  name: string;
-  language: Lang;
-}): Promise<{ id: string; name: string; language: Lang; joinedAt: number }> {
-  const supabase = getSupabase();
-  const code = input.code.trim().toUpperCase();
-  const { data: session, error } = await supabase
-    .from("sessions")
-    .select("*")
-    .eq("code", code)
-    .maybeSingle();
+/**
+ * Enrolled, signed-in student joins (or re-joins) a course's live lesson. No join codes:
+ * the server checks the student's institution account is enrolled in the lesson's course,
+ * and re-joining returns the same participant so question history is kept.
+ */
+export async function joinLiveLesson(input: { sessionId: string; language: Lang }): Promise<Student> {
+  const supabase = getSupabase("student");
+  const { data: student, error } = await supabase.rpc("join_live_session", {
+    p_session_id: input.sessionId,
+    p_language: input.language,
+  });
+  if (error || !student) throw new JoinError(error?.message ?? "Could not join the lesson.");
 
-  if (error) throw new JoinError(error.message);
-  if (!session) throw new JoinError("No classroom found with that code.");
-  if ((session as Session).status === "ended") throw new JoinError("This session has ended.");
-
-  const { data: student, error: studentError } = await supabase
-    .from("students")
-    .insert({
-      session_id: (session as Session).id,
-      name: input.name.trim(),
-      language: input.language,
-    })
-    .select("*")
-    .single();
-
-  if (studentError || !student) throw new JoinError(studentError?.message ?? "Could not join.");
-
-  const uiStudent = studentToUi(student as Student);
-  setSessionId((session as Session).id);
+  const row = student as Student;
+  const uiStudent = studentToUi(row);
+  setSessionId(row.session_id);
   setStudentId(uiStudent.id);
-  setState((s) => ({
-    ...s,
-    session: sessionToUi(session as Session),
-    students: [...s.students.filter((st) => st.id !== uiStudent.id), uiStudent],
-  }));
-  await loadSessionBundle((session as Session).id);
+  await loadSessionBundle(row.session_id);
   // Prefetch lesson in the student's language
   void ensureLessonTranslation(input.language).catch(() => {});
-  return uiStudent;
+  return row;
 }
 
 /** Translate + cache lesson notes for a language code if missing. Instant if cached. */
@@ -404,18 +386,22 @@ export async function generateExplanation(input: {
 }
 
 export async function getLessonTranslation(lang: Lang) {
+  const notes = getState().session.notes?.trim();
+  if (!notes) return null;
   try {
     const loc = await ensureLessonTranslation(lang);
-    if (loc[lang]) {
-      return {
-        topic: getState().session.title,
-        sections: [{ heading: "Lesson notes", body: loc[lang]! }],
-      };
-    }
+    const body = loc[lang] ?? loc["en"] ?? notes;
+    if (!body?.trim()) return null;
+    return {
+      topic: getState().session.title,
+      sections: [{ heading: "Lesson notes", body }],
+    };
   } catch {
-    /* fall through */
+    return {
+      topic: getState().session.title,
+      sections: [{ heading: "Lesson notes", body: notes }],
+    };
   }
-  return lessonContent["en"]!;
 }
 
 /** Generate (or return existing) AI interactive activity for a misconception. */

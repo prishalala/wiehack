@@ -11,14 +11,32 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClassroomRouteImport } from './routes/classroom'
-import { Route as JoinRouteImport } from './routes/join'
+import { Route as ParentRouteImport } from './routes/parent'
+import { Route as StudentRouteImport } from './routes/student'
 import { Route as TeacherRouteImport } from './routes/teacher'
+import { Route as ParentIndexRouteImport } from './routes/parent.index'
+import { Route as ParentLoginRouteImport } from './routes/parent.login'
+import { Route as StudentIndexRouteImport } from './routes/student.index'
+import { Route as StudentLoginRouteImport } from './routes/student.login'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as TeacherActivitiesRouteImport } from './routes/teacher.activities'
+import { Route as TeacherClassesRouteImport } from './routes/teacher.classes'
+import { Route as TeacherForgotPasswordRouteImport } from './routes/teacher.forgot-password'
+import { Route as TeacherHomeworkRouteImport } from './routes/teacher.homework'
 import { Route as TeacherInsightsRouteImport } from './routes/teacher.insights'
 import { Route as TeacherLiveRouteImport } from './routes/teacher.live'
+import { Route as TeacherLoginRouteImport } from './routes/teacher.login'
+import { Route as TeacherPerformanceRouteImport } from './routes/teacher.performance'
+import { Route as TeacherQuizzesRouteImport } from './routes/teacher.quizzes'
 import { Route as TeacherRadarRouteImport } from './routes/teacher.radar'
 import { Route as TeacherSessionsRouteImport } from './routes/teacher.sessions'
+import { Route as TeacherSettingsRouteImport } from './routes/teacher.settings'
+import { Route as StudentCourseCourseIdRouteImport } from './routes/student.course.$courseId'
+import { Route as TeacherHomeworkIndexRouteImport } from './routes/teacher.homework.index'
+import { Route as TeacherHomeworkIdRouteImport } from './routes/teacher.homework.$id'
+import { Route as TeacherHomeworkNewRouteImport } from './routes/teacher.homework.new'
+import { Route as TeacherQuizzesIndexRouteImport } from './routes/teacher.quizzes.index'
+import { Route as TeacherQuizzesNewRouteImport } from './routes/teacher.quizzes.new'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -30,15 +48,40 @@ const ClassroomRoute = ClassroomRouteImport.update({
   path: '/classroom',
   getParentRoute: () => rootRouteImport,
 } as any)
-const JoinRoute = JoinRouteImport.update({
-  id: '/join',
-  path: '/join',
+const ParentRoute = ParentRouteImport.update({
+  id: '/parent',
+  path: '/parent',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StudentRoute = StudentRouteImport.update({
+  id: '/student',
+  path: '/student',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherRoute = TeacherRouteImport.update({
   id: '/teacher',
   path: '/teacher',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ParentIndexRoute = ParentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ParentRoute,
+} as any)
+const ParentLoginRoute = ParentLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => ParentRoute,
+} as any)
+const StudentIndexRoute = StudentIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => StudentRoute,
+} as any)
+const StudentLoginRoute = StudentLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => StudentRoute,
 } as any)
 const TeacherIndexRoute = TeacherIndexRouteImport.update({
   id: '/',
@@ -48,6 +91,21 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
 const TeacherActivitiesRoute = TeacherActivitiesRouteImport.update({
   id: '/activities',
   path: '/activities',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherClassesRoute = TeacherClassesRouteImport.update({
+  id: '/classes',
+  path: '/classes',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherForgotPasswordRoute = TeacherForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherHomeworkRoute = TeacherHomeworkRouteImport.update({
+  id: '/homework',
+  path: '/homework',
   getParentRoute: () => TeacherRoute,
 } as any)
 const TeacherInsightsRoute = TeacherInsightsRouteImport.update({
@@ -60,6 +118,21 @@ const TeacherLiveRoute = TeacherLiveRouteImport.update({
   path: '/live',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherLoginRoute = TeacherLoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherPerformanceRoute = TeacherPerformanceRouteImport.update({
+  id: '/performance',
+  path: '/performance',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const TeacherQuizzesRoute = TeacherQuizzesRouteImport.update({
+  id: '/quizzes',
+  path: '/quizzes',
+  getParentRoute: () => TeacherRoute,
+} as any)
 const TeacherRadarRoute = TeacherRadarRouteImport.update({
   id: '/radar',
   path: '/radar',
@@ -70,85 +143,221 @@ const TeacherSessionsRoute = TeacherSessionsRouteImport.update({
   path: '/sessions',
   getParentRoute: () => TeacherRoute,
 } as any)
+const TeacherSettingsRoute = TeacherSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => TeacherRoute,
+} as any)
+const StudentCourseCourseIdRoute = StudentCourseCourseIdRouteImport.update({
+  id: '/course/$courseId',
+  path: '/course/$courseId',
+  getParentRoute: () => StudentRoute,
+} as any)
+const TeacherHomeworkIndexRoute = TeacherHomeworkIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeacherHomeworkRoute,
+} as any)
+const TeacherHomeworkIdRoute = TeacherHomeworkIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => TeacherHomeworkRoute,
+} as any)
+const TeacherHomeworkNewRoute = TeacherHomeworkNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TeacherHomeworkRoute,
+} as any)
+const TeacherQuizzesIndexRoute = TeacherQuizzesIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => TeacherQuizzesRoute,
+} as any)
+const TeacherQuizzesNewRoute = TeacherQuizzesNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => TeacherQuizzesRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
-  '/join': typeof JoinRoute
+  '/parent': typeof ParentRouteWithChildren
+  '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
+  '/parent/login': typeof ParentLoginRoute
+  '/student/login': typeof StudentLoginRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/classes': typeof TeacherClassesRoute
+  '/teacher/forgot-password': typeof TeacherForgotPasswordRoute
+  '/teacher/homework': typeof TeacherHomeworkRouteWithChildren
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
+  '/teacher/login': typeof TeacherLoginRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
+  '/teacher/quizzes': typeof TeacherQuizzesRouteWithChildren
   '/teacher/radar': typeof TeacherRadarRoute
   '/teacher/sessions': typeof TeacherSessionsRoute
+  '/teacher/settings': typeof TeacherSettingsRoute
+  '/parent/': typeof ParentIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/student/course/$courseId': typeof StudentCourseCourseIdRoute
+  '/teacher/homework/$id': typeof TeacherHomeworkIdRoute
+  '/teacher/homework/new': typeof TeacherHomeworkNewRoute
+  '/teacher/quizzes/new': typeof TeacherQuizzesNewRoute
+  '/teacher/homework/': typeof TeacherHomeworkIndexRoute
+  '/teacher/quizzes/': typeof TeacherQuizzesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
-  '/join': typeof JoinRoute
+  '/parent/login': typeof ParentLoginRoute
+  '/student/login': typeof StudentLoginRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/classes': typeof TeacherClassesRoute
+  '/teacher/forgot-password': typeof TeacherForgotPasswordRoute
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
+  '/teacher/login': typeof TeacherLoginRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
   '/teacher/radar': typeof TeacherRadarRoute
   '/teacher/sessions': typeof TeacherSessionsRoute
+  '/teacher/settings': typeof TeacherSettingsRoute
+  '/parent': typeof ParentIndexRoute
+  '/student': typeof StudentIndexRoute
   '/teacher': typeof TeacherIndexRoute
+  '/student/course/$courseId': typeof StudentCourseCourseIdRoute
+  '/teacher/homework/$id': typeof TeacherHomeworkIdRoute
+  '/teacher/homework/new': typeof TeacherHomeworkNewRoute
+  '/teacher/quizzes/new': typeof TeacherQuizzesNewRoute
+  '/teacher/homework': typeof TeacherHomeworkIndexRoute
+  '/teacher/quizzes': typeof TeacherQuizzesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/classroom': typeof ClassroomRoute
-  '/join': typeof JoinRoute
+  '/parent': typeof ParentRouteWithChildren
+  '/student': typeof StudentRouteWithChildren
   '/teacher': typeof TeacherRouteWithChildren
+  '/parent/login': typeof ParentLoginRoute
+  '/student/login': typeof StudentLoginRoute
   '/teacher/activities': typeof TeacherActivitiesRoute
+  '/teacher/classes': typeof TeacherClassesRoute
+  '/teacher/forgot-password': typeof TeacherForgotPasswordRoute
+  '/teacher/homework': typeof TeacherHomeworkRouteWithChildren
   '/teacher/insights': typeof TeacherInsightsRoute
   '/teacher/live': typeof TeacherLiveRoute
+  '/teacher/login': typeof TeacherLoginRoute
+  '/teacher/performance': typeof TeacherPerformanceRoute
+  '/teacher/quizzes': typeof TeacherQuizzesRouteWithChildren
   '/teacher/radar': typeof TeacherRadarRoute
   '/teacher/sessions': typeof TeacherSessionsRoute
+  '/teacher/settings': typeof TeacherSettingsRoute
+  '/parent/': typeof ParentIndexRoute
+  '/student/': typeof StudentIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/student/course/$courseId': typeof StudentCourseCourseIdRoute
+  '/teacher/homework/$id': typeof TeacherHomeworkIdRoute
+  '/teacher/homework/new': typeof TeacherHomeworkNewRoute
+  '/teacher/quizzes/new': typeof TeacherQuizzesNewRoute
+  '/teacher/homework/': typeof TeacherHomeworkIndexRoute
+  '/teacher/quizzes/': typeof TeacherQuizzesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/classroom'
-    | '/join'
+    | '/parent'
+    | '/student'
     | '/teacher'
+    | '/parent/login'
+    | '/student/login'
     | '/teacher/activities'
+    | '/teacher/classes'
+    | '/teacher/forgot-password'
+    | '/teacher/homework'
     | '/teacher/insights'
     | '/teacher/live'
+    | '/teacher/login'
+    | '/teacher/performance'
+    | '/teacher/quizzes'
     | '/teacher/radar'
     | '/teacher/sessions'
+    | '/teacher/settings'
+    | '/parent/'
+    | '/student/'
     | '/teacher/'
+    | '/student/course/$courseId'
+    | '/teacher/homework/$id'
+    | '/teacher/homework/new'
+    | '/teacher/quizzes/new'
+    | '/teacher/homework/'
+    | '/teacher/quizzes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/classroom'
-    | '/join'
+    | '/parent/login'
+    | '/student/login'
     | '/teacher/activities'
+    | '/teacher/classes'
+    | '/teacher/forgot-password'
     | '/teacher/insights'
     | '/teacher/live'
+    | '/teacher/login'
+    | '/teacher/performance'
     | '/teacher/radar'
     | '/teacher/sessions'
+    | '/teacher/settings'
+    | '/parent'
+    | '/student'
     | '/teacher'
+    | '/student/course/$courseId'
+    | '/teacher/homework/$id'
+    | '/teacher/homework/new'
+    | '/teacher/quizzes/new'
+    | '/teacher/homework'
+    | '/teacher/quizzes'
   id:
     | '__root__'
     | '/'
     | '/classroom'
-    | '/join'
+    | '/parent'
+    | '/student'
     | '/teacher'
+    | '/parent/login'
+    | '/student/login'
     | '/teacher/activities'
+    | '/teacher/classes'
+    | '/teacher/forgot-password'
+    | '/teacher/homework'
     | '/teacher/insights'
     | '/teacher/live'
+    | '/teacher/login'
+    | '/teacher/performance'
+    | '/teacher/quizzes'
     | '/teacher/radar'
     | '/teacher/sessions'
+    | '/teacher/settings'
+    | '/parent/'
+    | '/student/'
     | '/teacher/'
+    | '/student/course/$courseId'
+    | '/teacher/homework/$id'
+    | '/teacher/homework/new'
+    | '/teacher/quizzes/new'
+    | '/teacher/homework/'
+    | '/teacher/quizzes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ClassroomRoute: typeof ClassroomRoute
-  JoinRoute: typeof JoinRoute
+  ParentRoute: typeof ParentRouteWithChildren
+  StudentRoute: typeof StudentRouteWithChildren
   TeacherRoute: typeof TeacherRouteWithChildren
 }
 
@@ -168,11 +377,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClassroomRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/join': {
-      id: '/join'
-      path: '/join'
-      fullPath: '/join'
-      preLoaderRoute: typeof JoinRouteImport
+    '/parent': {
+      id: '/parent'
+      path: '/parent'
+      fullPath: '/parent'
+      preLoaderRoute: typeof ParentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/student': {
+      id: '/student'
+      path: '/student'
+      fullPath: '/student'
+      preLoaderRoute: typeof StudentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher': {
@@ -181,6 +397,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher'
       preLoaderRoute: typeof TeacherRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/parent/': {
+      id: '/parent/'
+      path: '/'
+      fullPath: '/parent/'
+      preLoaderRoute: typeof ParentIndexRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/parent/login': {
+      id: '/parent/login'
+      path: '/login'
+      fullPath: '/parent/login'
+      preLoaderRoute: typeof ParentLoginRouteImport
+      parentRoute: typeof ParentRoute
+    }
+    '/student/': {
+      id: '/student/'
+      path: '/'
+      fullPath: '/student/'
+      preLoaderRoute: typeof StudentIndexRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/student/login': {
+      id: '/student/login'
+      path: '/login'
+      fullPath: '/student/login'
+      preLoaderRoute: typeof StudentLoginRouteImport
+      parentRoute: typeof StudentRoute
     }
     '/teacher/': {
       id: '/teacher/'
@@ -194,6 +438,27 @@ declare module '@tanstack/react-router' {
       path: '/activities'
       fullPath: '/teacher/activities'
       preLoaderRoute: typeof TeacherActivitiesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/classes': {
+      id: '/teacher/classes'
+      path: '/classes'
+      fullPath: '/teacher/classes'
+      preLoaderRoute: typeof TeacherClassesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/forgot-password': {
+      id: '/teacher/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/teacher/forgot-password'
+      preLoaderRoute: typeof TeacherForgotPasswordRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/homework': {
+      id: '/teacher/homework'
+      path: '/homework'
+      fullPath: '/teacher/homework'
+      preLoaderRoute: typeof TeacherHomeworkRouteImport
       parentRoute: typeof TeacherRoute
     }
     '/teacher/insights': {
@@ -210,6 +475,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherLiveRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/login': {
+      id: '/teacher/login'
+      path: '/login'
+      fullPath: '/teacher/login'
+      preLoaderRoute: typeof TeacherLoginRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/performance': {
+      id: '/teacher/performance'
+      path: '/performance'
+      fullPath: '/teacher/performance'
+      preLoaderRoute: typeof TeacherPerformanceRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/teacher/quizzes': {
+      id: '/teacher/quizzes'
+      path: '/quizzes'
+      fullPath: '/teacher/quizzes'
+      preLoaderRoute: typeof TeacherQuizzesRouteImport
+      parentRoute: typeof TeacherRoute
+    }
     '/teacher/radar': {
       id: '/teacher/radar'
       path: '/radar'
@@ -224,24 +510,145 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherSessionsRouteImport
       parentRoute: typeof TeacherRoute
     }
+    '/teacher/settings': {
+      id: '/teacher/settings'
+      path: '/settings'
+      fullPath: '/teacher/settings'
+      preLoaderRoute: typeof TeacherSettingsRouteImport
+      parentRoute: typeof TeacherRoute
+    }
+    '/student/course/$courseId': {
+      id: '/student/course/$courseId'
+      path: '/course/$courseId'
+      fullPath: '/student/course/$courseId'
+      preLoaderRoute: typeof StudentCourseCourseIdRouteImport
+      parentRoute: typeof StudentRoute
+    }
+    '/teacher/homework/': {
+      id: '/teacher/homework/'
+      path: '/'
+      fullPath: '/teacher/homework/'
+      preLoaderRoute: typeof TeacherHomeworkIndexRouteImport
+      parentRoute: typeof TeacherHomeworkRoute
+    }
+    '/teacher/homework/$id': {
+      id: '/teacher/homework/$id'
+      path: '/$id'
+      fullPath: '/teacher/homework/$id'
+      preLoaderRoute: typeof TeacherHomeworkIdRouteImport
+      parentRoute: typeof TeacherHomeworkRoute
+    }
+    '/teacher/homework/new': {
+      id: '/teacher/homework/new'
+      path: '/new'
+      fullPath: '/teacher/homework/new'
+      preLoaderRoute: typeof TeacherHomeworkNewRouteImport
+      parentRoute: typeof TeacherHomeworkRoute
+    }
+    '/teacher/quizzes/': {
+      id: '/teacher/quizzes/'
+      path: '/'
+      fullPath: '/teacher/quizzes/'
+      preLoaderRoute: typeof TeacherQuizzesIndexRouteImport
+      parentRoute: typeof TeacherQuizzesRoute
+    }
+    '/teacher/quizzes/new': {
+      id: '/teacher/quizzes/new'
+      path: '/new'
+      fullPath: '/teacher/quizzes/new'
+      preLoaderRoute: typeof TeacherQuizzesNewRouteImport
+      parentRoute: typeof TeacherQuizzesRoute
+    }
   }
 }
 
+interface ParentRouteChildren {
+  ParentLoginRoute: typeof ParentLoginRoute
+  ParentIndexRoute: typeof ParentIndexRoute
+}
+
+const ParentRouteChildren: ParentRouteChildren = {
+  ParentLoginRoute: ParentLoginRoute,
+  ParentIndexRoute: ParentIndexRoute,
+}
+
+const ParentRouteWithChildren =
+  ParentRoute._addFileChildren(ParentRouteChildren)
+
+interface StudentRouteChildren {
+  StudentLoginRoute: typeof StudentLoginRoute
+  StudentIndexRoute: typeof StudentIndexRoute
+  StudentCourseCourseIdRoute: typeof StudentCourseCourseIdRoute
+}
+
+const StudentRouteChildren: StudentRouteChildren = {
+  StudentLoginRoute: StudentLoginRoute,
+  StudentIndexRoute: StudentIndexRoute,
+  StudentCourseCourseIdRoute: StudentCourseCourseIdRoute,
+}
+
+const StudentRouteWithChildren =
+  StudentRoute._addFileChildren(StudentRouteChildren)
+
+interface TeacherHomeworkRouteChildren {
+  TeacherHomeworkIdRoute: typeof TeacherHomeworkIdRoute
+  TeacherHomeworkNewRoute: typeof TeacherHomeworkNewRoute
+  TeacherHomeworkIndexRoute: typeof TeacherHomeworkIndexRoute
+}
+
+const TeacherHomeworkRouteChildren: TeacherHomeworkRouteChildren = {
+  TeacherHomeworkIdRoute: TeacherHomeworkIdRoute,
+  TeacherHomeworkNewRoute: TeacherHomeworkNewRoute,
+  TeacherHomeworkIndexRoute: TeacherHomeworkIndexRoute,
+}
+
+const TeacherHomeworkRouteWithChildren = TeacherHomeworkRoute._addFileChildren(
+  TeacherHomeworkRouteChildren,
+)
+
+interface TeacherQuizzesRouteChildren {
+  TeacherQuizzesNewRoute: typeof TeacherQuizzesNewRoute
+  TeacherQuizzesIndexRoute: typeof TeacherQuizzesIndexRoute
+}
+
+const TeacherQuizzesRouteChildren: TeacherQuizzesRouteChildren = {
+  TeacherQuizzesNewRoute: TeacherQuizzesNewRoute,
+  TeacherQuizzesIndexRoute: TeacherQuizzesIndexRoute,
+}
+
+const TeacherQuizzesRouteWithChildren = TeacherQuizzesRoute._addFileChildren(
+  TeacherQuizzesRouteChildren,
+)
+
 interface TeacherRouteChildren {
   TeacherActivitiesRoute: typeof TeacherActivitiesRoute
+  TeacherClassesRoute: typeof TeacherClassesRoute
+  TeacherForgotPasswordRoute: typeof TeacherForgotPasswordRoute
+  TeacherHomeworkRoute: typeof TeacherHomeworkRouteWithChildren
   TeacherInsightsRoute: typeof TeacherInsightsRoute
   TeacherLiveRoute: typeof TeacherLiveRoute
+  TeacherLoginRoute: typeof TeacherLoginRoute
+  TeacherPerformanceRoute: typeof TeacherPerformanceRoute
+  TeacherQuizzesRoute: typeof TeacherQuizzesRouteWithChildren
   TeacherRadarRoute: typeof TeacherRadarRoute
   TeacherSessionsRoute: typeof TeacherSessionsRoute
+  TeacherSettingsRoute: typeof TeacherSettingsRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
 }
 
 const TeacherRouteChildren: TeacherRouteChildren = {
   TeacherActivitiesRoute: TeacherActivitiesRoute,
+  TeacherClassesRoute: TeacherClassesRoute,
+  TeacherForgotPasswordRoute: TeacherForgotPasswordRoute,
+  TeacherHomeworkRoute: TeacherHomeworkRouteWithChildren,
   TeacherInsightsRoute: TeacherInsightsRoute,
   TeacherLiveRoute: TeacherLiveRoute,
+  TeacherLoginRoute: TeacherLoginRoute,
+  TeacherPerformanceRoute: TeacherPerformanceRoute,
+  TeacherQuizzesRoute: TeacherQuizzesRouteWithChildren,
   TeacherRadarRoute: TeacherRadarRoute,
   TeacherSessionsRoute: TeacherSessionsRoute,
+  TeacherSettingsRoute: TeacherSettingsRoute,
   TeacherIndexRoute: TeacherIndexRoute,
 }
 
@@ -251,7 +658,8 @@ const TeacherRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ClassroomRoute: ClassroomRoute,
-  JoinRoute: JoinRoute,
+  ParentRoute: ParentRouteWithChildren,
+  StudentRoute: StudentRouteWithChildren,
   TeacherRoute: TeacherRouteWithChildren,
 }
 export const routeTree = rootRouteImport

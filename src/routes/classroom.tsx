@@ -12,6 +12,7 @@ import { LanguageSwitcher } from "@/components/student/LanguageSwitcher";
 import { ActivityFrame } from "@/components/activity/ActivityFrame";
 import { CheckQuiz } from "@/components/activity/CheckQuiz";
 import { useLanguage } from "@/context/LanguageContext";
+import { StudentAuthProvider, useStudentAuth } from "@/context/StudentAuthContext";
 import {
   answerForLang,
   answerNeedsTranslate,
@@ -21,8 +22,10 @@ import {
   translateAnswer,
 } from "@/api";
 import { useSessionPoll } from "@/hooks/use-session-poll";
-import { lessonContent, t, type ExplanationLevel } from "@/i18n";
+import { t, type ExplanationLevel } from "@/i18n";
 import { getMyQuestionIds, setStudentId, useAppState, useStudentId } from "@/lib/store";
+import { setUnderstandingSignal, useMySignal } from "@/lib/understandingStore";
+import type { UnderstandingSignal } from "@/types/teacherPortal";
 import type { Activity, StudentQuestion } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -37,8 +40,29 @@ export const Route = createFileRoute("/classroom")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  component: Classroom,
+  component: ClassroomRoute,
 });
+
+/** Live lessons are for signed-in, enrolled students only (they join from their course page). */
+function ClassroomRoute() {
+  return (
+    <StudentAuthProvider>
+      <ClassroomGate />
+    </StudentAuthProvider>
+  );
+}
+
+function ClassroomGate() {
+  const { student, loading } = useStudentAuth();
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!loading && !student) void navigate({ to: "/student/login" });
+  }, [loading, student, navigate]);
+  if (loading || !student) {
+    return <div className="grid min-h-screen place-items-center text-sm text-muted-foreground">Checking your sign-in…</div>;
+  }
+  return <Classroom />;
+}
 
 const MAX = 500;
 
@@ -84,9 +108,9 @@ function Classroom() {
       <div className="grid min-h-screen place-items-center p-6 text-center">
         <div className="surface max-w-sm p-8">
           <BookOpen className="mx-auto h-6 w-6 text-primary" />
-          <h1 className="mt-3 font-display text-xl font-semibold">Join a class first</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Enter your teacher's code to open the classroom.</p>
-          <Button asChild className="mt-5"><Link to="/join">Go to join page</Link></Button>
+          <h1 className="mt-3 font-display text-xl font-semibold">No live lesson open</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Open one of your courses and press “Join live lesson” when your teacher starts it.</p>
+          <Button asChild className="mt-5"><Link to="/student">My courses</Link></Button>
         </div>
       </div>
     );
@@ -96,7 +120,7 @@ function Classroom() {
     state.session.notesLocalized?.[lang] ??
     state.session.notesLocalized?.["en"] ??
     state.session.notes;
-  const fallbackLesson = lessonContent["en"]!;
+  const hasLessonContent = Boolean(localizedNotes?.trim());
   const myIds = new Set(getMyQuestionIds());
   const mine = state.questions
     .filter((q) => q.studentId === student.id || myIds.has(q.id))
@@ -112,7 +136,7 @@ function Classroom() {
           <div className="ml-auto flex items-center gap-2">
             <span className="hidden text-sm text-muted-foreground md:inline">{t(lang, "hello")}, {student.name}</span>
             <LanguageSwitcher />
-            <Button variant="ghost" size="icon" aria-label={t(lang, "leave")} onClick={() => { setStudentId(null); navigate({ to: "/" }); }}><LogOut className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" aria-label={t(lang, "leave")} onClick={() => { setStudentId(null); navigate({ to: "/student" }); }}><LogOut className="h-4 w-4" /></Button>
           </div>
         </div>
       </header>
@@ -131,17 +155,17 @@ function Classroom() {
               <p className="mt-3 text-sm text-destructive" role="alert">{translateError}</p>
             )}
             <div className="mt-6 max-w-prose space-y-4 text-[17px] leading-relaxed">
-              {localizedNotes ? (
+              {hasLessonContent ? (
                 <p className="whitespace-pre-wrap">{localizedNotes}</p>
               ) : (
-                fallbackLesson.sections.map((s) => (
-                  <section key={s.heading}><h2 className="font-semibold">{s.heading}</h2><p className="mt-1 text-foreground/85">{s.body}</p></section>
-                ))
+                <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
+                  {t(lang, "noLessonContent")}
+                </p>
               )}
             </div>
           </article>
 
-          <ExplanationPanel />
+          <ExplanationPanel hasNotes={hasLessonContent} />
 
           <section className="surface p-6" aria-labelledby="act-h">
             <h2 id="act-h" className="flex items-center gap-2 font-semibold"><Sparkles className="h-4 w-4 text-primary" /> {t(lang, "sharedActivity")}</h2>
@@ -158,6 +182,7 @@ function Classroom() {
         </div>
 
         <aside className="space-y-6 lg:sticky lg:top-24 lg:h-fit">
+          <UnderstandingCheck sessionId={state.session.id} studentId={student.id} />
           <QuestionComposer studentId={student.id} studentName={student.name} />
           <section className="surface p-6">
             <h2 className="font-semibold">{t(lang, "yourQuestions")}</h2>
@@ -252,6 +277,39 @@ function SharedActivityBlock({ activity, lang, studentId }: { activity: Activity
   );
 }
 
+function UnderstandingCheck({ sessionId, studentId }: { sessionId: string; studentId: string }) {
+  const current = useMySignal(sessionId, studentId);
+  const options: { id: UnderstandingSignal; label: string }[] = [
+    { id: "understand", label: "I understand" },
+    { id: "example", label: "Need another example" },
+    { id: "confused", label: "I'm confused" },
+  ];
+  return (
+    <section className="surface p-5">
+      <h2 className="text-sm font-semibold">How are you doing?</h2>
+      <p className="mt-1 text-xs text-muted-foreground">Only your teacher sees this — not classmates.</p>
+      <div className="mt-3 flex flex-col gap-2">
+        {options.map((o) => (
+          <button
+            key={o.id}
+            type="button"
+            onClick={() => {
+              setUnderstandingSignal(sessionId, studentId, o.id);
+              toast.success("Sent to teacher");
+            }}
+            className={cn(
+              "rounded-lg border px-3 py-2 text-left text-sm transition-colors hover:bg-muted",
+              current === o.id && "border-primary bg-primary-soft",
+            )}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function QuestionComposer({ studentId, studentName }: { studentId: string; studentName: string }) {
   const { lang } = useLanguage();
   const [text, setText] = useState("");
@@ -298,16 +356,21 @@ function QuestionComposer({ studentId, studentName }: { studentId: string; stude
   );
 }
 
-function ExplanationPanel() {
+function ExplanationPanel({ hasNotes }: { hasNotes: boolean }) {
   const { lang } = useLanguage();
   const { session } = useAppState();
   const [level, setLevel] = useState<ExplanationLevel>("standard");
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">(hasNotes ? "loading" : "idle");
   const [lines, setLines] = useState<string[]>([]);
   // Cache explain-simpler results per lang+level so language switching feels instant
   const cacheRef = useState(() => new Map<string, string[]>())[0];
 
   const load = useCallback(async (lv: ExplanationLevel) => {
+    if (!hasNotes) {
+      setLines([]);
+      setStatus("idle");
+      return;
+    }
     const key = `${lang}:${lv}`;
     const hit = cacheRef.get(key);
     if (hit) {
@@ -322,9 +385,9 @@ function ExplanationPanel() {
       setLines(next);
       setStatus("ready");
     } catch { setStatus("error"); }
-  }, [lang, cacheRef]);
+  }, [lang, cacheRef, hasNotes]);
 
-  useEffect(() => { load(level); }, [level, load, session.notesLocalized?.[lang]]);
+  useEffect(() => { void load(level); }, [level, load, session.notesLocalized?.[lang]]);
 
   return (
     <section className="surface overflow-hidden" aria-live="polite">
@@ -332,6 +395,9 @@ function ExplanationPanel() {
         <h2 className="flex items-center gap-2 font-semibold"><Wand2 className="h-4 w-4 text-primary" /> {t(lang, "explanation")}</h2>
       </div>
       <div className="min-h-[160px] p-6">
+        {status === "idle" && (
+          <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">{t(lang, "noExplanation")}</p>
+        )}
         {status === "loading" && <div className="space-y-3" aria-label={t(lang, "loading")}><Skeleton className="h-4 w-11/12" /><Skeleton className="h-4 w-4/5" /><Skeleton className="h-4 w-2/3" /><p className="pt-1 text-xs text-muted-foreground">{t(lang, "loading")}</p></div>}
         {status === "error" && (
           <div className="flex items-center justify-between gap-3 rounded-lg bg-destructive/10 p-4 text-sm text-destructive">
@@ -350,13 +416,15 @@ function ExplanationPanel() {
           </ol>
         )}
       </div>
-      <div className="flex flex-wrap gap-2 border-t px-6 py-4">
-        {(["standard", "simple", "example"] as const).map((lv) => (
-          <Button key={lv} size="sm" variant={level === lv ? "default" : "outline"} onClick={() => (level === lv ? load(lv) : setLevel(lv))}>
-            {lv === "standard" ? t(lang, "explainSimply") : lv === "simple" ? t(lang, "moreSimply") : t(lang, "example")}
-          </Button>
-        ))}
-      </div>
+      {hasNotes && (
+        <div className="flex flex-wrap gap-2 border-t px-6 py-4">
+          {(["standard", "simple", "example"] as const).map((lv) => (
+            <Button key={lv} size="sm" variant={level === lv ? "default" : "outline"} onClick={() => (level === lv ? load(lv) : setLevel(lv))}>
+              {lv === "standard" ? t(lang, "explainSimply") : lv === "simple" ? t(lang, "moreSimply") : t(lang, "example")}
+            </Button>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
