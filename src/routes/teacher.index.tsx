@@ -6,6 +6,7 @@ import { DemoBadge, LangChip, StatCard } from "@/components/common";
 import { RadarVisual } from "@/components/radar/MisconceptionCard";
 import { useAppState } from "@/lib/store";
 import { demoQuestionTimeline } from "@/data/demo";
+import { TranslatedQuestion } from "@/components/radar/TranslatedQuestion";
 
 export const Route = createFileRoute("/teacher/")({
   head: () => ({
@@ -52,7 +53,7 @@ function Overview() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Students joined" value={students.length} icon={Users} tone="sky" />
         <StatCard label="Questions submitted" value={questions.length} hint={`${questions.filter((q) => q.status === "pending").length} pending analysis`} icon={MessageSquareText} />
-        <StatCard label="Misconceptions detected" value={misconceptions.length} hint="Sample results" icon={AlertTriangle} tone="alert" />
+        <StatCard label="Misconceptions detected" value={misconceptions.length} hint="From live analysis" icon={AlertTriangle} tone="alert" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
@@ -84,7 +85,7 @@ function Overview() {
           {recent.map((q) => (
             <li key={q.id} className="flex items-start gap-3 py-3">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-muted text-xs font-semibold">{q.studentName.slice(0, 2)}</span>
-              <div className="min-w-0 flex-1"><p className="text-sm">{q.text}</p><p className="mt-1 text-xs text-muted-foreground">{q.studentName}</p></div>
+              <div className="min-w-0 flex-1"><TranslatedQuestion q={q} /><p className="mt-1 text-xs text-muted-foreground">{q.studentName}</p></div>
               <LangChip lang={q.detectedLanguage} />
             </li>
           ))}

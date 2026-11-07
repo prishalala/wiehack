@@ -25,7 +25,7 @@ export function DemoBadge({ label = "Demo data" }: { label?: string }) {
   );
 }
 
-const langStyle: Record<DetectedLanguage, string> = {
+const langStyle: Record<string, string> = {
   English: "bg-sky-soft text-sky",
   Hindi: "bg-primary-soft text-accent-foreground",
   French: "bg-secondary text-foreground border border-border",
@@ -33,10 +33,11 @@ const langStyle: Record<DetectedLanguage, string> = {
   unknown: "bg-muted text-muted-foreground",
 };
 
-export function LangChip({ lang }: { lang: DetectedLanguage }) {
+export function LangChip({ lang }: { lang: DetectedLanguage | string }) {
+  const style = langStyle[lang] ?? langStyle["unknown"];
   return (
-    <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold", langStyle[lang])}>
-      {lang === "unknown" ? "Not detected" : lang}
+    <span className={cn("inline-flex items-center rounded-md px-1.5 py-0.5 text-[11px] font-semibold", style)}>
+      {!lang || lang === "unknown" ? "Not detected" : lang}
     </span>
   );
 }

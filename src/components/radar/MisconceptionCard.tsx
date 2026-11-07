@@ -5,8 +5,9 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LangChip } from "@/components/common";
-import { generateMiniLesson } from "@/services/mockApi";
-import type { Misconception, StudentQuestion } from "@/types";
+import { generateMiniLesson } from "@/api";
+import { TranslatedQuestion } from "./TranslatedQuestion";
+import type { StudentQuestion, UiMisconception } from "@/types";
 import { cn } from "@/lib/utils";
 
 const sev = {
@@ -15,7 +16,7 @@ const sev = {
   low: { bar: "bg-muted-foreground/40", label: "Isolated", chip: "bg-muted text-muted-foreground" },
 };
 
-export function MisconceptionCard({ m, questions, defaultOpen = false, total }: { m: Misconception; questions: StudentQuestion[]; defaultOpen?: boolean; total: number }) {
+export function MisconceptionCard({ m, questions, defaultOpen = false, total }: { m: UiMisconception; questions: StudentQuestion[]; defaultOpen?: boolean; total: number }) {
   const [open, setOpen] = useState(defaultOpen);
   const [details, setDetails] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -26,10 +27,15 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
 
   async function onGenerate() {
     setBusy(true);
-    const act = await generateMiniLesson(m.id);
-    setBusy(false);
-    toast.success("Mini-lesson ready to preview");
-    navigate({ to: "/teacher/activities", search: { id: act.id } });
+    try {
+      const act = await generateMiniLesson(m.id);
+      toast.success("Mini-lesson ready to preview");
+      navigate({ to: "/teacher/activities", search: { id: act.id } });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not generate activity");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -58,7 +64,7 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
               {support.map((q) => (
                 <li key={q.id} className="flex items-start gap-3 rounded-lg bg-card p-3 text-sm shadow-soft">
                   <LangChip lang={q.detectedLanguage} />
-                  <span className="flex-1">“{q.text}”</span>
+                  <div className="flex-1"><TranslatedQuestion q={q} quoted /></div>
                   <span className="text-xs text-muted-foreground">{q.studentName}</span>
                 </li>
               ))}
@@ -90,14 +96,14 @@ export function MisconceptionCard({ m, questions, defaultOpen = false, total }: 
             <div className="rounded-lg bg-muted p-3"><p className="font-display text-xl font-semibold">{m.languages.length}</p><p className="text-xs text-muted-foreground">Languages</p></div>
             <div className="rounded-lg bg-muted p-3"><p className="flex items-center justify-center gap-1 font-display text-xl font-semibold"><Users className="h-4 w-4" />{new Set(support.map((q) => q.studentId)).size}</p><p className="text-xs text-muted-foreground">Students</p></div>
           </div>
-          <p className="text-xs text-muted-foreground">These results are sample data for the prototype. A real analysis service will provide grouped results later.</p>
+          <p className="text-xs text-muted-foreground">Live AI clustering from this session’s questions.</p>
         </DialogContent>
       </Dialog>
     </article>
   );
 }
 
-export function RadarVisual({ items }: { items: { label: string; value: number; severity: Misconception["severity"] }[] }) {
+export function RadarVisual({ items }: { items: { label: string; value: number; severity: UiMisconception["severity"] }[] }) {
   const max = Math.max(1, ...items.map((i) => i.value));
   const angles = items.map((_, i) => (i / Math.max(items.length, 1)) * Math.PI * 2 - Math.PI / 2);
   const fill = { high: "var(--alert)", medium: "var(--sky)", low: "var(--muted-foreground)" };

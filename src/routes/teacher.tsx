@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Logo } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { useSessionPoll } from "@/hooks/use-session-poll";
+import { isSupabaseConfigured } from "@/lib/supabase";
 import { useAppState, resetDemo } from "@/lib/store";
 import { toast } from "sonner";
 
@@ -23,9 +25,14 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <nav className="space-y-1">
       {nav.map((n) => (
-        <Link key={n.to} to={n.to} onClick={onNavigate} activeOptions={{ exact: "exact" in n }}
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground"
-          activeProps={{ className: "bg-sidebar-accent text-foreground" }}>
+        <Link
+          key={n.to}
+          to={n.to}
+          onClick={onNavigate}
+          activeOptions={{ exact: "exact" in n }}
+          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-background/65 transition-colors hover:bg-background/10 hover:text-background"
+          activeProps={{ className: "!bg-primary !text-primary-foreground shadow-soft" }}
+        >
           <n.icon className="h-4 w-4" /> {n.label}
         </Link>
       ))}
@@ -36,19 +43,32 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 function TeacherLayout() {
   const { session, students } = useAppState();
   const [open, setOpen] = useState(false);
+  useSessionPoll(4000, Boolean(session.id));
+  const live = isSupabaseConfigured();
+
   return (
     <div className="flex min-h-screen">
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r bg-sidebar p-4 lg:flex">
-        <Logo className="px-2" />
-        <div className="mt-8 flex-1"><NavLinks /></div>
-        <Button variant="ghost" size="sm" className="justify-start text-muted-foreground" onClick={() => { resetDemo(); toast("Demo classroom reset"); }}>
-          <RotateCcw className="h-4 w-4" /> Reset demo data
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col overflow-hidden bg-foreground p-4 text-background lg:flex">
+        <span className="glow -left-16 top-1/3 h-48 w-48 bg-primary/40" aria-hidden />
+        <Logo className="relative px-2 text-background [&>span:first-child]:bg-primary [&>span:first-child]:text-primary-foreground" />
+        <p className="relative mt-8 px-3 text-[11px] font-semibold uppercase tracking-wider text-background/40">Teacher portal</p>
+        <div className="relative mt-2 flex-1"><NavLinks /></div>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative justify-start text-background/60 hover:bg-background/10 hover:text-background"
+          onClick={() => {
+            resetDemo();
+            toast(live ? "Cleared local session" : "Cleared local session");
+          }}
+        >
+          <RotateCcw className="h-4 w-4" /> Clear local session
         </Button>
       </aside>
       <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="left" className="w-72 bg-sidebar">
+        <SheetContent side="left" className="w-72 border-none bg-foreground text-background">
           <SheetTitle className="sr-only">Navigation</SheetTitle>
-          <Logo />
+          <Logo className="text-background [&>span:first-child]:bg-primary [&>span:first-child]:text-primary-foreground" />
           <div className="mt-8"><NavLinks onNavigate={() => setOpen(false)} /></div>
         </SheetContent>
       </Sheet>

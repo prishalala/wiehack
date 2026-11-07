@@ -55,6 +55,7 @@ export function createDemoState(): AppState {
       title: "Introduction to Fractions",
       subject: "Mathematics · Grade 5",
       notes: "A fraction shows part of a whole. The bottom number (denominator) tells how many equal parts the whole is divided into. The top number (numerator) tells how many of those parts we have.",
+      notesLocalized: null,
       joinCode: "FRC24B",
       status: "live",
       createdAt: T0,
@@ -111,7 +112,9 @@ export function createDemoState(): AppState {
         isDemo: true,
       },
     ],
-    activities: [fractionActivityTemplate(sessionId, "m1")],
+    activities: [],
+    checks: [],
+    checkResponses: [],
     quizResponses: [],
   };
 }

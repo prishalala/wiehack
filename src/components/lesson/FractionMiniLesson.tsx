@@ -50,6 +50,11 @@ export function FractionMiniLesson({ activity, lang, onAnswer, compact }: { acti
   const [picked, setPicked] = useState<number | null>(null);
   const quiz = activity.quiz;
   const correct = picked === quiz.correctIndex;
+  const title = activity.title[lang] ?? activity.title["en"] ?? "";
+  const instructions = activity.instructions[lang] ?? activity.instructions["en"] ?? "";
+  const explanation = activity.explanation[lang] ?? activity.explanation["en"] ?? "";
+  const prompt = quiz.prompt[lang] ?? quiz.prompt["en"] ?? "";
+  const feedback = quiz.feedback[lang] ?? quiz.feedback["en"];
 
   const toggle = (set: Set<number>, setter: (s: Set<number>) => void) => (i: number) => {
     const next = new Set(set);
@@ -61,8 +66,8 @@ export function FractionMiniLesson({ activity, lang, onAnswer, compact }: { acti
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-display text-xl font-semibold">{activity.title[lang]}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{activity.instructions[lang]}</p>
+        <h3 className="font-display text-xl font-semibold">{title}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">{instructions}</p>
       </div>
 
       <div className="inline-flex rounded-lg border bg-muted p-1" role="tablist" aria-label={t(lang, "compare")}>
@@ -93,12 +98,12 @@ export function FractionMiniLesson({ activity, lang, onAnswer, compact }: { acti
         </p>
       </div>
 
-      <p className="rounded-xl bg-sky-soft p-4 text-[15px] leading-relaxed">{activity.explanation[lang]}</p>
+      <p className="rounded-xl bg-sky-soft p-4 text-[15px] leading-relaxed">{explanation}</p>
 
       {!compact && (
         <div className="rounded-xl border p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t(lang, "quiz")}</p>
-          <p className="mt-1 font-semibold">{quiz.prompt[lang]}</p>
+          <p className="mt-1 font-semibold">{prompt}</p>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
             {quiz.options.map((opt, i) => (
               <button key={opt} disabled={correct} onClick={() => { setPicked(i); onAnswer?.(i, i === quiz.correctIndex); }}
@@ -113,7 +118,7 @@ export function FractionMiniLesson({ activity, lang, onAnswer, compact }: { acti
           </div>
           {picked !== null && (
             <div className={cn("mt-3 flex items-center justify-between gap-3 rounded-lg p-3 text-sm", correct ? "bg-success-soft" : "bg-muted")} role="status">
-              <span className="flex items-center gap-2">{correct && <PartyPopper className="h-4 w-4 text-success" />}{correct ? quiz.feedback[lang].correct : quiz.feedback[lang].incorrect}</span>
+              <span className="flex items-center gap-2">{correct && <PartyPopper className="h-4 w-4 text-success" />}{correct ? feedback?.correct : feedback?.incorrect}</span>
               {!correct && <Button variant="ghost" size="sm" onClick={() => setPicked(null)}><RotateCcw className="h-3.5 w-3.5" />{t(lang, "tryAgain")}</Button>}
             </div>
           )}

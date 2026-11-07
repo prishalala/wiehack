@@ -3,10 +3,13 @@ import { useEffect, useState } from "react";
 import { Check, Copy, Hourglass, Inbox, Lightbulb, Radar, Users } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DemoBadge, EmptyState, LangChip, timeAgo } from "@/components/common";
+import { EmptyState, LangChip, timeAgo } from "@/components/common";
+import { AnalysisControls } from "@/components/radar/AnalysisControls";
 import { MisconceptionCard, RadarVisual } from "@/components/radar/MisconceptionCard";
+import { TranslatedQuestion } from "@/components/radar/TranslatedQuestion";
+import { useMisconceptionAnalysis } from "@/hooks/use-misconception-analysis";
 import { useAppState } from "@/lib/store";
-import { markAnswered } from "@/services/mockApi";
+import { markAnswered } from "@/api";
 
 export const Route = createFileRoute("/teacher/live")({
   head: () => ({
@@ -28,6 +31,7 @@ function useNow() {
 
 function Live() {
   const { session, students, questions, misconceptions } = useAppState();
+  const { status, error, reanalyze, analyzing } = useMisconceptionAnalysis(Boolean(session.id));
   const now = useNow();
   const pending = questions.filter((q) => q.status === "pending").sort((a, b) => b.createdAt - a.createdAt);
   const feed = [...questions].sort((a, b) => b.createdAt - a.createdAt);
@@ -62,9 +66,14 @@ function Live() {
             </dl>
           </div>
           <div className="space-y-3 p-5 sm:p-6">
-            <div className="flex items-center justify-between"><p className="text-sm font-semibold">Detected misconceptions</p><DemoBadge label="Sample results — not live AI" /></div>
-            {misconceptions.length === 0 ? (
-              <EmptyState icon={Radar} title="Nothing detected yet" body="As questions arrive and are analyzed, shared misconceptions will appear here." />
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-sm font-semibold">Detected misconceptions</p>
+              <AnalysisControls status={status} error={error} onReanalyze={reanalyze} />
+            </div>
+            {analyzing && misconceptions.length === 0 ? (
+              <EmptyState icon={Radar} title="Analyzing…" body="Grouping questions by underlying misunderstanding." />
+            ) : misconceptions.length === 0 ? (
+              <EmptyState icon={Radar} title="Nothing detected yet" body="Need at least 2 related questions. New questions trigger analysis automatically (max every 20s)." />
             ) : (
               misconceptions.map((m, i) => <MisconceptionCard key={m.id} m={m} questions={questions} total={questions.length} defaultOpen={i === 0} />)
             )}
@@ -75,16 +84,19 @@ function Live() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="surface p-6">
           <div className="flex items-center justify-between">
-            <h2 className="flex items-center gap-2 font-semibold"><Hourglass className="h-4 w-4 text-alert" /> Pending analysis</h2>
+            <h2 className="flex items-center gap-2 font-semibold"><Hourglass className="h-4 w-4 text-alert" /> Pending / unclustered</h2>
             <span className="rounded-full bg-alert-soft px-2 py-0.5 text-xs font-semibold text-alert-foreground">{pending.length}</span>
           </div>
-          <p className="mt-1 text-sm text-muted-foreground">New questions wait here until the analysis service is connected.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Questions not yet clustered — click Analyze questions or wait for auto-analysis.</p>
           <ul className="mt-4 space-y-2">
             {pending.length === 0 && <EmptyState icon={Check} title="All caught up" body="No questions are waiting." />}
             {pending.map((q) => (
               <li key={q.id} className="flex items-start gap-3 rounded-lg border p-3">
-                <div className="min-w-0 flex-1"><p className="text-sm">{q.text}</p><p className="mt-1 text-xs text-muted-foreground">{q.studentName} · {now ? timeAgo(q.createdAt, now) : ""}</p></div>
-                <Button size="sm" variant="outline" onClick={() => markAnswered(q.id).then(() => toast.success("Marked as answered"))}>Answered</Button>
+                <div className="min-w-0 flex-1">
+                  <TranslatedQuestion q={q} />
+                  <p className="mt-1 text-xs text-muted-foreground">{q.isAnonymous ? "Anonymous" : q.studentName} · {now ? timeAgo(q.createdAt, now) : ""}</p>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => markAnswered(q.id).then(() => toast.success("Marked as answered")).catch((e: Error) => toast.error(e.message))}>Answered</Button>
               </li>
             ))}
           </ul>
@@ -93,13 +105,20 @@ function Live() {
         <section className="surface p-6">
           <h2 className="flex items-center gap-2 font-semibold"><Inbox className="h-4 w-4 text-primary" /> Incoming questions</h2>
           <ul className="mt-4 max-h-[420px] space-y-1 overflow-y-auto pr-1">
-            {feed.map((q) => (
-              <li key={q.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-muted">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold">{q.studentName.slice(0, 2)}</span>
-                <div className="min-w-0 flex-1"><p className="text-sm">{q.text}</p><p className="text-xs text-muted-foreground">{q.studentName}{q.status === "answered" && " · answered"}</p></div>
-                <LangChip lang={q.detectedLanguage} />
-              </li>
-            ))}
+            {feed.map((q) => {
+              const label = q.isAnonymous ? "Anonymous" : q.studentName;
+              return (
+                <li key={q.id} className="flex items-start gap-3 rounded-lg p-2 hover:bg-muted">
+                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-[11px] font-semibold">{label.slice(0, 2)}</span>
+                  <div className="min-w-0 flex-1">
+                    <TranslatedQuestion q={q} />
+                    <p className="mt-1 text-xs text-muted-foreground">{label}{q.status === "answered" && " · answered"}{q.status === "analyzed" && " · clustered"}{q.isRomanized ? " · romanized" : ""}</p>
+                    {q.answer && <p className="mt-1 text-xs text-foreground/80">AI: {q.answer}</p>}
+                  </div>
+                  <LangChip lang={q.detectedLanguage} />
+                </li>
+              );
+            })}
           </ul>
         </section>
       </div>
@@ -113,6 +132,9 @@ function Live() {
               <p className="mt-2 text-sm">{m.intervention}</p>
             </div>
           ))}
+          {misconceptions.length === 0 && (
+            <p className="text-sm text-muted-foreground md:col-span-3">Interventions appear after analysis finds shared misconceptions.</p>
+          )}
         </div>
       </section>
     </div>
